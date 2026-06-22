@@ -27,7 +27,7 @@ const F = {
 };
 
 const STYLES = `
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700;800;900&display=swap');
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{background:#f0f7f0;font-family:'Inter',sans-serif}
 @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
@@ -161,6 +161,32 @@ async function chatWithAI(farmer, weather, history, message) {
 }
 
 // ─── ATOMS ────────────────────────────────────────────────────────
+function Avatar({ src, alt, size = 40, fallback = "👤", style = {} }) {
+  const [err, setErr] = useState(false);
+  if (err || !src) {
+    return (
+      <div style={{
+        width: size, height: size, borderRadius: "50%",
+        background: F.greenBg, border: "2px solid " + F.green + "44",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        fontSize: size * 0.5, flexShrink: 0, ...style
+      }}>{fallback}</div>
+    );
+  }
+  return (
+    <img
+      src={src}
+      alt={alt}
+      onError={() => setErr(true)}
+      style={{
+        width: size, height: size, borderRadius: "50%",
+        objectFit: "cover", border: "2px solid " + F.green + "44",
+        flexShrink: 0, ...style
+      }}
+    />
+  );
+}
+
 function Spinner({ size = 18, color = F.green }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24"
@@ -260,11 +286,7 @@ function Sidebar({ page, setPage, weather, alertCount }) {
       {/* Farmer profile */}
       <div style={{ padding: "14px 16px", borderTop: "1px solid #ffffff22" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
-          <div style={{ width: 42, height: 42, borderRadius: "50%",
-            background: F.greenL, display: "flex", alignItems: "center",
-            justifyContent: "center", fontSize: 22, flexShrink: 0 }}>
-            {FARMER.avatar}
-          </div>
+          <Avatar src="/avatars/farmer-john.png" alt={FARMER.name} size={42} fallback="👨‍🌾" />
           <div>
             <div style={{ fontSize: 11, color: "#ffffff88" }}>Good Morning,</div>
             <div style={{ fontFamily: "'Poppins'", fontWeight: 700,
@@ -361,12 +383,11 @@ function DashboardPage({ data, loading, onMarkDone, done, setPage }) {
           </div>
 
           {/* Crop illustration */}
-          <div style={{ width: 100, height: 100, borderRadius: "50%",
-            background: F.greenBg, display: "flex", alignItems: "center",
-            justifyContent: "center", fontSize: 52,
-            animation: "bounce 3s ease infinite", flexShrink: 0 }}>
-            🌿
-          </div>
+          <img src="/avatars/farm.png" alt="Farm" style={{
+            width: 100, height: 100, borderRadius: "50%",
+            objectFit: "cover", border: "2px solid " + F.green + "44",
+            animation: "bounce 3s ease infinite", flexShrink: 0
+          }} />
 
           {/* Check rows */}
           <div style={{ minWidth: 200 }}>
@@ -413,12 +434,11 @@ function DashboardPage({ data, loading, onMarkDone, done, setPage }) {
             </div>
 
             {/* Disease image */}
-            <div style={{ width: 110, height: 110, borderRadius: "50%",
-              background: F.greenBg, display: "flex", alignItems: "center",
-              justifyContent: "center", fontSize: 56, flexShrink: 0,
-              boxShadow: "0 4px 16px #00000018" }}>
-              🍅
-            </div>
+            <img src="/avatars/farm.png" alt="Crop" style={{
+              width: 110, height: 110, borderRadius: "50%",
+              objectFit: "cover", border: "2px solid " + F.green + "44",
+              flexShrink: 0, boxShadow: "0 4px 16px #00000018"
+            }} />
 
             {/* Risk stats */}
             <div style={{ display: "flex", flexDirection: "column", gap: 10, minWidth: 140 }}>
@@ -887,7 +907,7 @@ function MyFarmPage() {
       <h2 style={{ fontFamily: "'Poppins'", fontWeight: 700, fontSize: 22, color: F.text }}>My Farm</h2>
       <div style={{ background: F.card, borderRadius: 16, padding: 24, boxShadow: "0 2px 12px #00000010" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 20 }}>
-          <div style={{ width: 64, height: 64, borderRadius: "50%", background: F.greenBg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 36 }}>👨‍🌾</div>
+          <Avatar src="/avatars/farmer-john.png" alt={FARMER.fullName} size={64} fallback="👨‍🌾" />
           <div>
             <div style={{ fontFamily: "'Poppins'", fontWeight: 700, fontSize: 20, color: F.text }}>{FARMER.fullName}</div>
             <div style={{ fontSize: 14, color: F.muted }}>{FARMER.farmName} · {FARMER.location}</div>
@@ -1022,9 +1042,7 @@ export default function FarmerDashboard({ onSwitchToMachine }) {
                 </span>
               )}
             </div>
-            <div style={{ width: 36, height: 36, borderRadius: "50%",
-              background: F.greenBg, display: "flex", alignItems: "center",
-              justifyContent: "center", fontSize: 20 }}>{FARMER.avatar}</div>
+            <Avatar src="/avatars/farmer-john.png" alt={FARMER.name} size={36} fallback="👨‍🌾" />
           </div>
         </div>
 

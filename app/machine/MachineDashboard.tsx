@@ -1,0 +1,1260 @@
+"use client"
+import { useState, useEffect, useCallback } from "react";
+import {
+  AreaChart, Area, LineChart, Line, BarChart, Bar,
+  PieChart, Pie, Cell,
+  XAxis, YAxis, CartesianGrid, Tooltip,
+  ResponsiveContainer, Legend
+} from "recharts";
+import FarmerDashboard from "@/FarmerDashboard";
+// ─── THEME ────────────────────────────────────────────────────────
+const T = {
+  bg:      "#0a0f0a",
+  s1:      "#0d140d",
+  s2:      "#111a11",
+  card:    "#0f1a0f",
+  border:  "#1a2e1a",
+  borderL: "#253d25",
+  g:       "#22c55e",
+  gd:      "#16a34a",
+  gdim:    "#052e16",
+  lime:    "#84cc16",
+  amber:   "#f59e0b",
+  red:     "#ef4444",
+  blue:    "#3b82f6",
+  purple:  "#a855f7",
+  teal:    "#14b8a6",
+  orange:  "#f97316",
+  cyan:    "#06b6d4",
+  text:    "#e2ffe2",
+  muted:   "#4d7a4d",
+  mutedL:  "#7aaa7a",
+  white:   "#ffffff",
+};
+
+const STYLES = `
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600;700&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:#0a0f0a;font-family:'Plus Jakarta Sans',sans-serif;color:#e2ffe2;font-size:15px}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes ping{0%{transform:scale(1);opacity:1}100%{transform:scale(2);opacity:0}}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+@keyframes slideIn{from{opacity:0;transform:translateX(-6px)}to{opacity:1;transform:translateX(0)}}
+::-webkit-scrollbar{width:3px}
+::-webkit-scrollbar-track{background:#0a0f0a}
+::-webkit-scrollbar-thumb{background:#1a2e1a;border-radius:2px}
+`;
+
+// ─── MOCK DATA ────────────────────────────────────────────────────
+const PREDICTION_DATA = [
+  { date:"May 12", predictions:3200, correct:2700 },
+  { date:"May 13", predictions:4100, correct:3500 },
+  { date:"May 14", predictions:3800, correct:3200 },
+  { date:"May 15", predictions:5200, correct:4400 },
+  { date:"May 16", predictions:4800, correct:4100 },
+  { date:"May 17", predictions:6100, correct:5200 },
+  { date:"May 18", predictions:5800, correct:4982 },
+];
+
+const DATA_STREAMS = [
+  { name:"Weather Stations", value:38, records:"931K", color:"#3b82f6" },
+  { name:"Satellite Imagery",value:24, records:"588K", color:"#22c55e" },
+  { name:"Field Sensors",    value:18, records:"441K", color:"#a855f7" },
+  { name:"Farmer Reports",   value:12, records:"294K", color:"#f59e0b" },
+  { name:"Market Feeds",     value:6,  records:"147K", color:"#14b8a6" },
+  { name:"Other Sources",    value:2,  records:"49K",  color:"#6b7c6b"  },
+];
+
+const AGENTS = [
+  { name:"Weather Agent",            status:"Running", accuracy:98.6, records:"2.4K", color:T.blue   },
+  { name:"Disease Surveillance Agent",status:"Running",accuracy:97.1, records:"3.7K", color:T.red    },
+  { name:"Pest Detection Agent",     status:"Running", accuracy:96.3, records:"2.1K", color:T.orange },
+  { name:"Soil Intelligence Agent",  status:"Running", accuracy:98.9, records:"1.8K", color:T.lime   },
+  { name:"Market Intelligence Agent",status:"Running", accuracy:97.6, records:"2.9K", color:T.amber  },
+  { name:"Crop Growth Agent",        status:"Running", accuracy:98.2, records:"2.3K", color:T.teal   },
+  { name:"Research Knowledge Agent", status:"Running", accuracy:96.8, records:"1.2K", color:T.purple },
+  { name:"Recommendation Agent",     status:"Running", accuracy:98.7, records:"3.1K", color:T.g      },
+];
+
+const LAYERS = [
+  { n:1,  name:"Observation Layer",  status:"Live", color:T.blue   },
+  { n:2,  name:"Memory Layer",       status:"Live", color:T.purple },
+  { n:3,  name:"Knowledge Graph",    status:"Live", color:T.lime   },
+  { n:4,  name:"AI Agents Layer",    status:"Live", color:T.teal   },
+  { n:5,  name:"Reasoning Engine",   status:"Live", color:T.g      },
+  { n:6,  name:"Prediction Engine",  status:"Live", color:T.amber  },
+  { n:7,  name:"Decision Engine",    status:"Live", color:T.orange },
+  { n:8,  name:"Alert Network",      status:"Live", color:T.red    },
+  { n:9,  name:"Human Action",       status:"Live", color:T.cyan   },
+  { n:10, name:"Feedback Loop",      status:"Live", color:T.purple },
+];
+
+const INTEL_FEED = [
+  { time:"13:45", msg:"Early Blight risk detected in 24 farms", sub:"Tomatoes • Nyandarua County",   level:"High",       color:T.red    },
+  { time:"13:42", msg:"Fall Armyworm outbreak predicted",       sub:"Maize • Trans Nzoia County",    level:"High",       color:T.red    },
+  { time:"13:35", msg:"Weather anomaly detected",               sub:"High rainfall expected in 3 days",level:"Moderate", color:T.amber  },
+  { time:"13:30", msg:"Price increase predicted",               sub:"Tomatoes • +12% in next 7 days", level:"Opportunity",color:T.g    },
+  { time:"13:28", msg:"Irrigation recommendation generated",    sub:"126 farms need irrigation",      level:"Action",     color:T.blue   },
+];
+
+const RECENT_ALERTS = [
+  { name:"Early Blight",    county:"Nyandarua County",  level:"High Risk",     time:"13:45", color:T.red,   icon:"⚠️" },
+  { name:"Fall Armyworm",   county:"Trans Nzoia County",level:"High Risk",     time:"13:42", color:T.red,   icon:"⚠️" },
+  { name:"Bacterial Wilt",  county:"Kakamega County",   level:"Moderate Risk", time:"13:38", color:T.amber, icon:"⚠️" },
+  { name:"Leaf Miner",      county:"Nakuru County",     level:"Low Risk",      time:"13:30", color:T.g,     icon:"ℹ️" },
+  { name:"Aphids",          county:"Bungoma County",    level:"Moderate Risk", time:"13:28", color:T.amber, icon:"⚠️" },
+];
+
+// Kenya county risk map data (simplified SVG positions)
+const COUNTIES = [
+  { name:"Trans Nzoia",  x:280, y:185, risk:"very-high", r:18 },
+  { name:"Uasin Gishu",  x:320, y:210, risk:"very-high", r:16 },
+  { name:"Elgeyo M.",    x:360, y:200, risk:"high",      r:14 },
+  { name:"Nandi",        x:340, y:240, risk:"high",      r:15 },
+  { name:"Bungoma",      x:240, y:215, risk:"high",      r:14 },
+  { name:"Kakamega",     x:255, y:255, risk:"moderate",  r:15 },
+  { name:"Vihiga",       x:270, y:280, risk:"moderate",  r:10 },
+  { name:"Siaya",        x:235, y:300, risk:"low",       r:12 },
+  { name:"Kisumu",       x:255, y:310, risk:"low",       r:13 },
+  { name:"Kericho",      x:330, y:275, risk:"moderate",  r:14 },
+  { name:"Nakuru",       x:375, y:270, risk:"high",      r:18 },
+  { name:"Nyandarua",    x:420, y:245, risk:"very-high", r:14 },
+  { name:"Narok",        x:345, y:330, risk:"low",       r:16 },
+  { name:"Homa Bay",     x:265, y:345, risk:"very-low",  r:13 },
+  { name:"Migori",       x:270, y:380, risk:"very-low",  r:12 },
+  { name:"Nyamira",      x:295, y:330, risk:"low",       r:11 },
+  { name:"Bomet",        x:335, y:355, risk:"very-low",  r:12 },
+  { name:"Kericho",      x:325, y:300, risk:"moderate",  r:11 },
+  { name:"Nairobi",      x:420, y:295, risk:"moderate",  r:12 },
+];
+
+const RISK_COLORS = {
+  "very-high": "#dc2626",
+  "high":      "#f97316",
+  "moderate":  "#f59e0b",
+  "low":       "#84cc16",
+  "very-low":  "#22c55e",
+};
+
+// ─── NAV SECTIONS ─────────────────────────────────────────────────
+const NAV = [
+  { section:"OVERVIEW", items:[
+    { id:"overview",  icon:"/icons/machine-overview.jfif",  label:"Machine Overview" },
+    { id:"intel",     icon:"/icons/intel.jfif",     label:"Intelligence Feed" },
+    { id:"monitor",   icon:"/icons/monitor.jfif",   label:"System Monitor"    },
+  ]},
+  { section:"INTELLIGENCE LAYERS", items:[
+    { id:"knowledge", icon:"/icons/knowledge.jfif",  label:"Knowledge Graph"  },
+    { id:"agents",    icon:"/icons/agents.jfif",     label:"AI Agents"         },
+    { id:"reasoning", icon:"/icons/reasoning.jfif",  label:"Reasoning Engine"  },
+    { id:"prediction",icon:"/icons/prediction.jfif", label:"Prediction Engine" },
+    { id:"decision",  icon:"/icons/decision.jfif",   label:"Decision Engine"   },
+  ]},
+  { section:"DATA & INSIGHTS", items:[
+    { id:"streams",   icon:"/icons/streams.jfif",   label:"Data Streams"      },
+    { id:"riskmap",   icon:"/icons/riskmap.jfif",   label:"Risk Map"          },
+    { id:"analytics", icon:"/icons/analytics.jfif", label:"Analytics"         },
+    { id:"reports",   icon:"/icons/reports.jfif",   label:"Reports"           },
+  ]},
+  { section:"SYSTEM", items:[
+    { id:"users",     icon:"/icons/users.jfif",        label:"Users & Roles"     },
+    { id:"integrations",icon:"/icons/intergration.jfif",label:"Integrations"     },
+    { id:"settings",  icon:"/icons/settings.jfif",     label:"Settings"          },
+    { id:"audit",     icon:"/icons/audit.jfif",        label:"Audit Logs"        },
+  ]},
+];
+
+// ─── ATOMS ────────────────────────────────────────────────────────
+function Avatar({ src, alt, size = 32, fallback = "👤", style = {} }) {
+  const [err, setErr] = useState(false);
+  if (err || !src) {
+    return (
+      <div style={{
+        width: size, height: size, borderRadius: "50%",
+        background: T.g + "22", border: "1px solid " + T.g + "44",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        fontSize: size * 0.5, flexShrink: 0, ...style
+      }}>{fallback}</div>
+    );
+  }
+  return (
+    <img
+      src={src}
+      alt={alt}
+      onError={() => setErr(true)}
+      style={{
+        width: size, height: size, borderRadius: "50%",
+        objectFit: "cover", border: "1px solid " + T.border,
+        flexShrink: 0, ...style
+      }}
+    />
+  );
+}
+
+function Spinner({ size = 14, color = T.g }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24"
+      style={{ animation: "spin .8s linear infinite", flexShrink: 0 }}>
+      <circle cx="12" cy="12" r="10" fill="none" stroke={color}
+        strokeWidth="2.5" strokeDasharray="50" strokeDashoffset="15" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function LiveDot({ color = T.g }) {
+  return (
+    <span style={{ position: "relative", display: "inline-flex",
+      alignItems: "center", justifyContent: "center",
+      width: 8, height: 8, flexShrink: 0 }}>
+      <span style={{ position: "absolute", width: "100%", height: "100%",
+        borderRadius: "50%", background: color,
+        animation: "ping 1.5s ease infinite", opacity: .4 }} />
+      <span style={{ width: 8, height: 8, borderRadius: "50%",
+        background: color, display: "block" }} />
+    </span>
+  );
+}
+
+function MetricCard({ icon, label, value, delta, color, delay = 0 }) {
+  return (
+    <div style={{ background: T.card, border: "1px solid " + T.border,
+      borderRadius: 12, padding: "16px 20px",
+      animation: "fadeUp .4s ease " + delay + "s both",
+      display: "flex", alignItems: "flex-start", gap: 14, flex: 1 }}>
+      <div style={{ width: 44, height: 44, borderRadius: 10,
+        background: color + "18", border: "1px solid " + color + "33",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        fontSize: 22, flexShrink: 0 }}>{icon}</div>
+      <div style={{ flex: 1 }}>
+        <div style={{ fontSize: 13, color: T.muted, marginBottom: 4,
+          fontFamily: "'Space Grotesk',sans-serif", letterSpacing: "0.04em", fontWeight: 500 }}>{label}</div>
+        <div style={{ fontFamily: "'Inter'", fontWeight: 800,
+          fontSize: 32, color: T.text, lineHeight: 1, marginBottom: 5 }}>{value}</div>
+        {delta && (
+          <div style={{ fontSize: 11, color: T.g, fontWeight: 500 }}>
+            ▲ {delta}
+          </div>
+        )}
+      </div>
+      <div style={{ width: 28, height: 28, borderRadius: 7,
+        background: color + "18", border: "1px solid " + color + "33",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        cursor: "pointer", color, fontSize: 13 }}>→</div>
+    </div>
+  );
+}
+
+function ChartTip({ active, payload, label }) {
+  if (!active || !payload?.length) return null;
+  return (
+    <div style={{ background: T.s2, border: "1px solid " + T.border,
+      borderRadius: 8, padding: "7px 11px",
+      fontFamily: "'JetBrains Mono'", fontSize: 11 }}>
+      <div style={{ color: T.muted, marginBottom: 3 }}>{label}</div>
+      {payload.map((p, i) => (
+        <div key={i} style={{ color: p.color || T.g }}>
+          {p.name}: {typeof p.value === "number" ? p.value.toLocaleString() : p.value}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ─── RISK HEAT MAP ────────────────────────────────────────────────
+function RiskHeatMap() {
+  const [hover, setHover] = useState(null);
+  const [county, setCounty] = useState("All Counties");
+
+  return (
+    <div style={{ background: T.card, border: "1px solid " + T.border,
+      borderRadius: 12, padding: 16, height: "100%" }}>
+      <div style={{ display: "flex", justifyContent: "space-between",
+        alignItems: "center", marginBottom: 12 }}>
+        <div>
+          <div style={{ fontFamily: "'Inter'", fontWeight: 600,
+            fontSize: 16, color: T.text }}>Risk Heat Map</div>
+          <div style={{ fontSize: 11, color: T.muted, marginTop: 1 }}>Disease & Pest Risk</div>
+        </div>
+        <select value={county} onChange={e => setCounty(e.target.value)}
+          style={{ background: T.s2, border: "1px solid " + T.border,
+            color: T.text, borderRadius: 7, padding: "5px 10px",
+            fontSize: 11, cursor: "pointer", outline: "none",
+            fontFamily: "'JetBrains Mono'" }}>
+          <option>All Counties</option>
+          <option>Nakuru</option>
+          <option>Nyandarua</option>
+          <option>Trans Nzoia</option>
+        </select>
+      </div>
+
+      {/* Kenya map SVG */}
+      <div style={{ position: "relative", background: T.s1,
+        borderRadius: 10, overflow: "hidden" }}>
+        <svg viewBox="180 160 320 260" style={{ width: "100%", height: 280 }}>
+          {/* Background */}
+          <rect x="180" y="160" width="320" height="260" fill={T.bg} rx="8" />
+
+          {/* Grid lines */}
+          {[0, 1, 2, 3, 4].map(i => (
+            <line key={"h" + i} x1="180" y1={160 + i * 52} x2="500" y2={160 + i * 52}
+              stroke={T.border} strokeWidth="0.5" opacity="0.5" />
+          ))}
+          {[0, 1, 2, 3, 4, 5].map(i => (
+            <line key={"v" + i} x1={180 + i * 64} y1="160" x2={180 + i * 64} y2="420"
+              stroke={T.border} strokeWidth="0.5" opacity="0.5" />
+          ))}
+
+          {/* County bubbles */}
+          {COUNTIES.map((c, i) => {
+            const col = RISK_COLORS[c.risk];
+            const isHov = hover === c.name;
+            return (
+              <g key={c.name + i}
+                onMouseEnter={() => setHover(c.name)}
+                onMouseLeave={() => setHover(null)}
+                style={{ cursor: "pointer" }}>
+                <circle cx={c.x} cy={c.y} r={c.r + (isHov ? 4 : 0)}
+                  fill={col + "33"} stroke={col}
+                  strokeWidth={isHov ? 2 : 1}
+                  style={{ transition: "all .2s", filter: isHov ? "drop-shadow(0 0 8px " + col + ")" : "none" }} />
+                <circle cx={c.x} cy={c.y} r={Math.max(3, c.r * 0.35)}
+                  fill={col} opacity="0.9" />
+                {(c.r > 14 || isHov) && (
+                  <text x={c.x} y={c.y + c.r + 10} textAnchor="middle"
+                    fill={T.mutedL} fontSize="7.5" fontFamily="Inter">
+                    {c.name}
+                  </text>
+                )}
+              </g>
+            );
+          })}
+
+          {/* Hover tooltip */}
+          {hover && (() => {
+            const c = COUNTIES.find(x => x.name === hover);
+            if (!c) return null;
+            return (
+              <g>
+                <rect x={c.x - 40} y={c.y - c.r - 28} width={80} height={22}
+                  fill={T.s2} stroke={RISK_COLORS[c.risk]} strokeWidth="1" rx="4" />
+                <text x={c.x} y={c.y - c.r - 13} textAnchor="middle"
+                  fill={T.text} fontSize="9" fontFamily="Inter" fontWeight="600">
+                  {c.name}
+                </text>
+              </g>
+            );
+          })()}
+        </svg>
+
+        {/* Controls */}
+        <div style={{ position: "absolute", bottom: 10, right: 10,
+          display: "flex", flexDirection: "column", gap: 4 }}>
+          {["⛶","＋","－"].map((btn, i) => (
+            <button key={i} style={{ width: 26, height: 26, background: T.s2,
+              border: "1px solid " + T.border, color: T.mutedL, borderRadius: 5,
+              cursor: "pointer", fontSize: 13, display: "flex",
+              alignItems: "center", justifyContent: "center" }}>{btn}</button>
+          ))}
+        </div>
+      </div>
+
+      {/* Legend */}
+      <div style={{ display: "flex", gap: 10, marginTop: 10, flexWrap: "wrap" }}>
+        <div style={{ fontSize: 10, color: T.muted, fontFamily: "'JetBrains Mono'",
+          marginRight: 4, alignSelf: "center" }}>Risk Level</div>
+        {Object.entries({ "Very High":"#dc2626","High":"#f97316","Moderate":"#f59e0b","Low":"#84cc16","Very Low":"#22c55e" }).map(([l, c]) => (
+          <div key={l} style={{ display: "flex", alignItems: "center", gap: 4 }}>
+            <div style={{ width: 10, height: 10, borderRadius: 2, background: c }} />
+            <span style={{ fontSize: 9, color: T.muted, fontFamily: "'JetBrains Mono'" }}>{l}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── INTELLIGENCE FEED ────────────────────────────────────────────
+function IntelFeed({ onViewAll }) {
+  const [live, setLive] = useState(INTEL_FEED);
+  const [tick, setTick] = useState(0);
+
+  useEffect(() => {
+    const iv = setInterval(() => {
+      setTick(t => t + 1);
+      if (Math.random() > 0.6) {
+        const NEW_EVENTS = [
+          { msg:"Humidity spike detected — 89%", sub:"Nakuru North Subcounty",   level:"Moderate", color:T.amber  },
+          { msg:"New farm registered",            sub:"Molo • Nakuru County",     level:"Action",   color:T.blue   },
+          { msg:"Fungal risk window opening",     sub:"Potatoes • Nyandarua",     level:"High",     color:T.red    },
+          { msg:"Market price update",            sub:"Tomatoes KES 45/kg",       level:"Opportunity",color:T.g   },
+        ];
+        const pick = NEW_EVENTS[Math.floor(Math.random() * NEW_EVENTS.length)];
+        const now  = new Date();
+        const ts   = now.getHours().toString().padStart(2,"0") + ":" + now.getMinutes().toString().padStart(2,"0");
+        setLive(l => [{ time:ts, ...pick }, ...l.slice(0, 8)]);
+      }
+    }, 3000);
+    return () => clearInterval(iv);
+  }, []);
+
+  return (
+    <div style={{ background: T.card, border: "1px solid " + T.border,
+      borderRadius: 12, padding: 16, display: "flex",
+      flexDirection: "column", height: "100%" }}>
+      <div style={{ display: "flex", justifyContent: "space-between",
+        alignItems: "center", marginBottom: 12 }}>
+        <div style={{ fontFamily: "'Inter'", fontWeight: 600,
+          fontSize: 16, color: T.text }}>Intelligence Feed</div>
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <LiveDot color={T.g} />
+          <span style={{ fontSize: 10, color: T.g,
+            fontFamily: "'JetBrains Mono'" }}>Live</span>
+          <button style={{ background: "none", border: "none",
+            color: T.muted, cursor: "pointer", fontSize: 12 }}>▾</button>
+        </div>
+      </div>
+
+      <div style={{ flex: 1, overflowY: "auto",
+        display: "flex", flexDirection: "column", gap: 1 }}>
+        {live.map((item, i) => (
+          <div key={i} style={{ display: "flex", gap: 10,
+            alignItems: "flex-start", padding: "8px 0",
+            borderBottom: "1px solid " + T.border,
+            animation: i === 0 ? "slideIn .3s ease" : "none" }}>
+            <div style={{ width: 6, height: 6, borderRadius: "50%",
+              background: item.color, flexShrink: 0, marginTop: 5,
+              boxShadow: i === 0 ? "0 0 6px " + item.color : "none" }} />
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 13, fontWeight: 500,
+                color: T.text, lineHeight: 1.4 }}>{item.msg}</div>
+              <div style={{ fontSize: 10, color: T.muted, marginTop: 2 }}>{item.sub}</div>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column",
+              alignItems: "flex-end", gap: 3, flexShrink: 0 }}>
+              <span style={{ fontSize: 9, color: T.muted,
+                fontFamily: "'JetBrains Mono'" }}>{item.time}</span>
+              <span style={{ fontSize: 9, color: item.color,
+                fontWeight: 600 }}>{item.level}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <button onClick={onViewAll}
+        style={{ background: "none", border: "none", color: T.g,
+          fontSize: 13, cursor: "pointer", textAlign: "left",
+          marginTop: 10, display: "flex", alignItems: "center", gap: 4,
+          fontWeight: 500 }}>
+        View All Intelligence →
+      </button>
+    </div>
+  );
+}
+
+// ─── SYSTEM ARCHITECTURE STATUS ───────────────────────────────────
+function ArchStatus() {
+  return (
+    <div style={{ background: T.card, border: "1px solid " + T.border,
+      borderRadius: 12, padding: 16, height: "100%" }}>
+      <div style={{ display: "flex", justifyContent: "space-between",
+        alignItems: "center", marginBottom: 12 }}>
+        <div style={{ fontFamily: "'Inter'", fontWeight: 600,
+          fontSize: 16, color: T.text }}>System Architecture Status</div>
+        <span style={{ fontSize: 10, color: T.g,
+          fontFamily: "'JetBrains Mono'", fontWeight: 600 }}>
+          All Layers Operational
+        </span>
+      </div>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+        {LAYERS.map((layer, i) => (
+          <div key={layer.n} style={{ display: "flex", alignItems: "center",
+            gap: 8, padding: "5px 0",
+            borderBottom: "1px solid " + T.border + "88",
+            animation: "fadeUp .3s ease " + (i * .04) + "s both" }}>
+            <span style={{ fontFamily: "'JetBrains Mono'", fontSize: 9,
+              color: T.muted, minWidth: 48 }}>Layer {layer.n}</span>
+            <span style={{ fontSize: 11, color: T.text, flex: 1,
+              fontWeight: 500 }}>{layer.name}</span>
+            <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+              <LiveDot color={layer.color} />
+              <span style={{ fontSize: 9, color: layer.color,
+                fontFamily: "'JetBrains Mono'", fontWeight: 600 }}>Live</span>
+            </div>
+            {/* Mini network graph */}
+            <svg width="60" height="16" style={{ flexShrink: 0 }}>
+              {[0,1,2,3,4].map(j => (
+                <circle key={j} cx={j * 13 + 5} cy={8}
+                  r={j % 2 === 0 ? 3 : 2}
+                  fill={layer.color + (j === 4 ? "ff" : j === 3 ? "cc" : "66")} />
+              ))}
+              {[0,1,2,3].map(j => (
+                <line key={j} x1={j * 13 + 8} y1={8}
+                  x2={j * 13 + 18} y2={8}
+                  stroke={layer.color + "44"} strokeWidth="1" />
+              ))}
+            </svg>
+          </div>
+        ))}
+      </div>
+
+      <button style={{ background: "none", border: "none", color: T.g,
+        fontSize: 12, cursor: "pointer", textAlign: "left",
+        marginTop: 10, display: "flex", alignItems: "center", gap: 4,
+        fontWeight: 500 }}>
+        View Architecture →
+      </button>
+    </div>
+  );
+}
+
+// ─── AGENTS STATUS ────────────────────────────────────────────────
+function AgentsStatus() {
+  return (
+    <div style={{ background: T.card, border: "1px solid " + T.border,
+      borderRadius: 12, padding: 16 }}>
+      <div style={{ display: "flex", justifyContent: "space-between",
+        alignItems: "center", marginBottom: 14 }}>
+        <div style={{ fontFamily: "'Inter'", fontWeight: 600,
+          fontSize: 16, color: T.text }}>AI Agents Status</div>
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <LiveDot color={T.g} />
+          <span style={{ fontSize: 11, color: T.g, fontWeight: 600 }}>
+            {AGENTS.length} Agents Running
+          </span>
+        </div>
+      </div>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+        {/* Header */}
+        <div style={{ display: "grid",
+          gridTemplateColumns: "1fr 70px 60px 50px",
+          gap: 8, padding: "4px 8px",
+          borderBottom: "1px solid " + T.border }}>
+          {["Agent","Status","Accuracy","Records"].map(h => (
+            <span key={h} style={{ fontSize: 9, color: T.muted,
+              fontFamily: "'JetBrains Mono'", letterSpacing: "0.06em" }}>{h}</span>
+          ))}
+        </div>
+
+        {AGENTS.map((agent, i) => (
+          <div key={i} style={{ display: "grid",
+            gridTemplateColumns: "1fr 70px 60px 50px",
+            gap: 8, padding: "8px 8px",
+            borderBottom: "1px solid " + T.border + "66",
+            animation: "fadeUp .3s ease " + (i * .05) + "s both",
+            borderRadius: 6, transition: "background .2s",
+            background: "transparent" }}
+            onMouseEnter={e => e.currentTarget.style.background = T.s1}
+            onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <div style={{ width: 7, height: 7, borderRadius: "50%",
+                background: agent.color, flexShrink: 0 }} />
+              <span style={{ fontSize: 12, color: T.text,
+                fontWeight: 500 }}>{agent.name}</span>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+              <LiveDot color={T.g} />
+              <span style={{ fontSize: 11, color: T.g,
+                fontWeight: 600 }}>{agent.status}</span>
+            </div>
+            <span style={{ fontSize: 12, color: agent.accuracy > 97 ? T.g : T.amber,
+              fontFamily: "'JetBrains Mono'", fontWeight: 600 }}>
+              {agent.accuracy}%
+            </span>
+            <span style={{ fontSize: 11, color: T.muted,
+              fontFamily: "'JetBrains Mono'" }}>{agent.records}</span>
+          </div>
+        ))}
+      </div>
+
+      <button style={{ background: "none", border: "none", color: T.g,
+        fontSize: 12, cursor: "pointer", textAlign: "left",
+        marginTop: 10, display: "flex", alignItems: "center", gap: 4,
+        fontWeight: 500 }}>
+        View All Agents →
+      </button>
+    </div>
+  );
+}
+
+// ─── DATA STREAMS ─────────────────────────────────────────────────
+function DataStreams() {
+  return (
+    <div style={{ background: T.card, border: "1px solid " + T.border,
+      borderRadius: 12, padding: 16 }}>
+      <div style={{ display: "flex", justifyContent: "space-between",
+        alignItems: "center", marginBottom: 14 }}>
+        <div style={{ fontFamily: "'Inter'", fontWeight: 600,
+          fontSize: 16, color: T.text }}>Data Streams (Live)</div>
+        <button style={{ background: "none", border: "none", color: T.g,
+          fontSize: 12, cursor: "pointer", fontWeight: 500 }}>
+          View All Streams →
+        </button>
+      </div>
+
+      <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
+        {/* Donut */}
+        <div style={{ position: "relative", width: 160, height: 160, flexShrink: 0 }}>
+          <ResponsiveContainer width={160} height={160}>
+            <PieChart>
+              <Pie data={DATA_STREAMS} cx={75} cy={75}
+                innerRadius={48} outerRadius={72}
+                dataKey="value" strokeWidth={0}>
+                {DATA_STREAMS.map((d, i) => (
+                  <Cell key={i} fill={d.color} />
+                ))}
+              </Pie>
+            </PieChart>
+          </ResponsiveContainer>
+          <div style={{ position: "absolute", inset: 0,
+            display: "flex", flexDirection: "column",
+            alignItems: "center", justifyContent: "center" }}>
+            <div style={{ fontFamily: "'Inter'", fontWeight: 800,
+              fontSize: 18, color: T.text, lineHeight: 1 }}>2.45M</div>
+            <div style={{ fontSize: 9, color: T.muted,
+              fontFamily: "'JetBrains Mono'", marginTop: 2 }}>Total (24h)</div>
+          </div>
+        </div>
+
+        {/* Legend */}
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 7 }}>
+          {DATA_STREAMS.map((d, i) => (
+            <div key={i} style={{ display: "flex", alignItems: "center",
+              justifyContent: "space-between", gap: 8 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+                <div style={{ width: 10, height: 10, borderRadius: 2,
+                  background: d.color, flexShrink: 0 }} />
+                <span style={{ fontSize: 11, color: T.mutedL }}>{d.name}</span>
+              </div>
+              <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+                <span style={{ fontSize: 11, color: T.text,
+                  fontWeight: 600 }}>{d.value}%</span>
+                <span style={{ fontSize: 10, color: T.muted,
+                  fontFamily: "'JetBrains Mono'" }}>{d.records}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── PREDICTIONS SUMMARY ──────────────────────────────────────────
+function PredictionsSummary() {
+  return (
+    <div style={{ background: T.card, border: "1px solid " + T.border,
+      borderRadius: 12, padding: 16 }}>
+      <div style={{ display: "flex", justifyContent: "space-between",
+        alignItems: "center", marginBottom: 14 }}>
+        <div style={{ fontFamily: "'Inter'", fontWeight: 600,
+          fontSize: 16, color: T.text }}>Predictions Summary</div>
+        <select style={{ background: T.s2, border: "1px solid " + T.border,
+          color: T.text, borderRadius: 6, padding: "4px 8px",
+          fontSize: 11, cursor: "pointer", outline: "none",
+          fontFamily: "'JetBrains Mono'" }}>
+          <option>This Week</option>
+          <option>This Month</option>
+          <option>Last 7 Days</option>
+        </select>
+      </div>
+
+      <ResponsiveContainer width="100%" height={140}>
+        <AreaChart data={PREDICTION_DATA}>
+          <defs>
+            <linearGradient id="gPred" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor={T.g} stopOpacity={0.25} />
+              <stop offset="95%" stopColor={T.g} stopOpacity={0} />
+            </linearGradient>
+            <linearGradient id="gCorr" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor={T.lime} stopOpacity={0.15} />
+              <stop offset="95%" stopColor={T.lime} stopOpacity={0} />
+            </linearGradient>
+          </defs>
+          <CartesianGrid strokeDasharray="3 3" stroke={T.border} vertical={false} />
+          <XAxis dataKey="date" tick={{ fill: T.muted, fontSize: 9, fontFamily: "'JetBrains Mono'" }} axisLine={false} tickLine={false} />
+          <YAxis tick={{ fill: T.muted, fontSize: 9, fontFamily: "'JetBrains Mono'" }} axisLine={false} tickLine={false} width={32} />
+          <Tooltip content={<ChartTip />} />
+          <Area type="monotone" dataKey="predictions" name="Total" stroke={T.g} fill="url(#gPred)" strokeWidth={2} dot={false} />
+          <Area type="monotone" dataKey="correct" name="Correct" stroke={T.lime} fill="url(#gCorr)" strokeWidth={2} dot={false} />
+        </AreaChart>
+      </ResponsiveContainer>
+
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)",
+        gap: 8, marginTop: 12 }}>
+        {[
+          ["Total Predictions","12,842","▲ 9.3%", T.g    ],
+          ["Correct Predictions","10,982","▲ 85.5%",T.lime],
+          ["Accuracy Rate","85.5%","▲ 3.6%",   T.amber   ],
+          ["Avg. Confidence","78.2%","▲ 2.1%",  T.blue    ],
+        ].map(([l, v, d, c]) => (
+          <div key={l} style={{ background: T.s1, borderRadius: 8, padding: "10px 12px" }}>
+            <div style={{ fontSize: 9, color: T.muted,
+              fontFamily: "'JetBrains Mono'", marginBottom: 4 }}>{l}</div>
+            <div style={{ fontFamily: "'Inter'", fontWeight: 700,
+              fontSize: 16, color: T.text, marginBottom: 2 }}>{v}</div>
+            <div style={{ fontSize: 10, color: c }}>{d}</div>
+          </div>
+        ))}
+      </div>
+
+      <button style={{ background: "none", border: "none", color: T.g,
+        fontSize: 12, cursor: "pointer", textAlign: "left",
+        marginTop: 10, display: "flex", alignItems: "center", gap: 4,
+        fontWeight: 500 }}>
+        View Prediction Engine →
+      </button>
+    </div>
+  );
+}
+
+// ─── RECENT ALERTS BAR ────────────────────────────────────────────
+function RecentAlertsBar() {
+  return (
+    <div style={{ background: T.card, border: "1px solid " + T.border,
+      borderRadius: 12, padding: 16 }}>
+      <div style={{ display: "flex", justifyContent: "space-between",
+        alignItems: "center", marginBottom: 12 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <div style={{ fontFamily: "'Inter'", fontWeight: 600,
+            fontSize: 16, color: T.text }}>Recent Alerts</div>
+          <span style={{ background: T.red + "22", border: "1px solid " + T.red + "44",
+            color: T.red, borderRadius: 20, padding: "2px 8px",
+            fontSize: 11, fontWeight: 700 }}>327</span>
+        </div>
+        <button style={{ background: "none", border: "none", color: T.g,
+          fontSize: 12, cursor: "pointer", fontWeight: 500 }}>
+          View All Alerts →
+        </button>
+      </div>
+      <div style={{ display: "flex", gap: 10, overflowX: "auto", paddingBottom: 4 }}>
+        {RECENT_ALERTS.map((a, i) => (
+          <div key={i} style={{ background: T.s1,
+            border: "1px solid " + a.color + "33",
+            borderTop: "2px solid " + a.color,
+            borderRadius: 10, padding: "12px 14px",
+            minWidth: 170, flexShrink: 0,
+            animation: "fadeUp .3s ease " + (i * .06) + "s both" }}>
+            <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 6 }}>
+              <span style={{ fontSize: 16 }}>{a.icon}</span>
+              <span style={{ fontFamily: "'Inter'", fontWeight: 600,
+                fontSize: 13, color: T.text }}>{a.name}</span>
+            </div>
+            <div style={{ fontSize: 11, color: T.muted, marginBottom: 6 }}>{a.county}</div>
+            <div style={{ display: "flex", justifyContent: "space-between",
+              alignItems: "center" }}>
+              <span style={{ background: a.color + "22",
+                border: "1px solid " + a.color + "44",
+                color: a.color, borderRadius: 4, padding: "2px 7px",
+                fontSize: 9, fontFamily: "'JetBrains Mono'",
+                fontWeight: 700 }}>{a.level}</span>
+              <span style={{ fontSize: 10, color: T.muted,
+                fontFamily: "'JetBrains Mono'" }}>{a.time}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── MACHINE HEALTH WIDGET ────────────────────────────────────────
+function MachineHealth() {
+  return (
+    <div style={{ padding: "12px 16px", borderTop: "1px solid " + T.border }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
+        <svg width="14" height="14" viewBox="0 0 24 24" style={{ color: T.g }}>
+          <path d="M3 12h4l3-8 4 16 3-8h4" stroke={T.g} strokeWidth="2"
+            fill="none" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+        <span style={{ fontFamily: "'Inter'", fontWeight: 600,
+          fontSize: 12, color: T.text }}>Machine Health</span>
+      </div>
+      <div style={{ fontFamily: "'Inter'", fontWeight: 800,
+        fontSize: 26, color: T.g }}>98.6%</div>
+      <div style={{ display: "flex", alignItems: "center", gap: 5, marginTop: 3 }}>
+        <LiveDot color={T.g} />
+        <span style={{ fontSize: 10, color: T.mutedL }}>All systems active</span>
+      </div>
+    </div>
+  );
+}
+
+// ─── SIDEBAR ──────────────────────────────────────────────────────
+function MachineSidebar({ page, setPage }) {
+  return (
+    <div style={{ width: 210, background: T.s1, borderRight: "1px solid " + T.border,
+      height: "100vh", position: "sticky", top: 0, flexShrink: 0,
+      display: "flex", flexDirection: "column", overflow: "hidden" }}>
+
+      {/* Logo */}
+      <div style={{ padding: "16px 16px 12px",
+        borderBottom: "1px solid " + T.border }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
+          <img src="/android-chrome-512x512.png" alt="AgriMind" style={{
+            width: 36, height: 36, borderRadius: 9,
+            objectFit: "cover"
+          }} />
+          <div>
+            <div style={{ fontFamily: "'Inter'", fontWeight: 800,
+              fontSize: 16, color: T.text, letterSpacing: "-0.01em" }}>
+              Agri<span style={{ color: T.g }}>Mind</span>
+            </div>
+            <div style={{ fontSize: 9, color: T.muted,
+              fontFamily: "'JetBrains Mono'" }}>Agricultural Intelligence Network</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Nav */}
+      <div style={{ flex: 1, overflowY: "auto", padding: "8px 0" }}>
+        {NAV.map(section => (
+          <div key={section.section} style={{ marginBottom: 8 }}>
+            <div style={{ padding: "6px 16px 4px",
+              fontSize: 10, color: T.muted,
+              fontFamily: "'Space Grotesk',sans-serif",
+              letterSpacing: "0.08em", fontWeight: 600, textTransform: "uppercase" }}>
+              {section.section}
+            </div>
+            {section.items.map(item => {
+              const active = page === item.id;
+              return (
+                <button key={item.id} onClick={() => setPage(item.id)}
+                  style={{ width: "100%", display: "flex",
+                    alignItems: "center", gap: 10,
+                    padding: "8px 16px", border: "none",
+                    background: active ? T.g + "15" : "transparent",
+                    borderLeft: active ? "3px solid " + T.g : "3px solid transparent",
+                    color: active ? T.g : T.muted,
+                    cursor: "pointer", fontSize: 12,
+                    fontFamily: "'Inter'", fontWeight: active ? 600 : 400,
+                    transition: "all .2s", textAlign: "left" }}>
+                  <img src={item.icon} alt="" style={{ width: 18, height: 18, objectFit: "contain", filter: "brightness(0) invert(1)" }} />
+                  {item.label}
+                </button>
+              );
+            })}
+          </div>
+        ))}
+      </div>
+
+      <MachineHealth />
+    </div>
+  );
+}
+
+// ─── HEADER ───────────────────────────────────────────────────────
+function MachineHeader({ page, onSwitchFarmer }) {
+  const [time, setTime] = useState(new Date());
+  useEffect(() => {
+    const iv = setInterval(() => setTime(new Date()), 1000);
+    return () => clearInterval(iv);
+  }, []);
+
+  const label = NAV.flatMap(s => s.items).find(i => i.id === page)?.label || "Machine Overview";
+  const timeStr = time.toLocaleTimeString("en-KE", { hour:"2-digit", minute:"2-digit", second:"2-digit" }) + " EAT";
+
+  return (
+    <div style={{ height: 56, background: T.s1,
+      borderBottom: "1px solid " + T.border,
+      padding: "0 20px", display: "flex", alignItems: "center",
+      justifyContent: "space-between", position: "sticky",
+      top: 0, zIndex: 100 }}>
+      <div>
+        <div style={{ fontFamily: "'Inter'", fontWeight: 700,
+          fontSize: 17, color: T.text }}>AgriMind Machine Dashboard</div>
+        <div style={{ display: "flex", alignItems: "center", gap: 5, marginTop: 1 }}>
+          <LiveDot color={T.g} />
+          <span style={{ fontSize: 10, color: T.g,
+            fontFamily: "'JetBrains Mono'" }}>System Operational</span>
+        </div>
+      </div>
+
+      <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+        {/* Live badge */}
+        <div style={{ background: T.g + "18", border: "1px solid " + T.g + "44",
+          borderRadius: 20, padding: "5px 12px",
+          display: "flex", alignItems: "center", gap: 6 }}>
+          <LiveDot color={T.g} />
+          <span style={{ fontSize: 11, color: T.g,
+            fontFamily: "'JetBrains Mono'", fontWeight: 600 }}>Live Data</span>
+        </div>
+
+        {/* Time */}
+        <span style={{ fontFamily: "'JetBrains Mono'",
+          fontSize: 14, color: T.mutedL }}>{timeStr}</span>
+
+        {/* Icons */}
+        <button style={{ background: "none", border: "none",
+          color: T.muted, cursor: "pointer", fontSize: 18 }}>🔍</button>
+
+        {/* Notification */}
+        <div style={{ position: "relative" }}>
+          <button style={{ background: "none", border: "none",
+            color: T.muted, cursor: "pointer", fontSize: 18 }}>🔔</button>
+          <span style={{ position: "absolute", top: -2, right: -2,
+            background: T.red, color: "#fff", borderRadius: "50%",
+            width: 16, height: 16, display: "flex", alignItems: "center",
+            justifyContent: "center", fontSize: 9, fontWeight: 700 }}>7</span>
+        </div>
+
+        <button style={{ background: "none", border: "none",
+          color: T.muted, cursor: "pointer", fontSize: 18 }}>⚙</button>
+
+        {/* Admin profile */}
+        <div style={{ display: "flex", alignItems: "center", gap: 8,
+          background: T.s2, border: "1px solid " + T.border,
+          borderRadius: 8, padding: "5px 10px", cursor: "pointer" }}>
+          <Avatar src="/avatars/admin.png" alt="System Admin" size={28} />
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 600, color: T.text }}>System Admin</div>
+            <div style={{ fontSize: 9, color: T.muted }}>Super Administrator</div>
+          </div>
+          <span style={{ color: T.muted, fontSize: 10 }}>▾</span>
+        </div>
+
+        {/* Switch to farmer */}
+        {onSwitchFarmer && (
+          <button onClick={onSwitchFarmer}
+            style={{ background: T.gdim, border: "1px solid " + T.g + "44",
+              color: T.g, borderRadius: 8, padding: "6px 12px",
+              fontFamily: "'JetBrains Mono'", fontSize: 10,
+              fontWeight: 600, cursor: "pointer",
+              letterSpacing: "0.06em" }}>
+            🌿 Farmer View
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── DATE RANGE WIDGET ────────────────────────────────────────────
+function DateRangeWidget() {
+  return (
+    <div style={{ background: T.card, border: "1px solid " + T.border,
+      borderRadius: 12, padding: "12px 16px",
+      display: "flex", flexDirection: "column", gap: 10 }}>
+      <div style={{ fontSize: 10, color: T.muted,
+        fontFamily: "'JetBrains Mono'", letterSpacing: "0.08em" }}>Date Range</div>
+      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+        <span style={{ fontSize: 11, color: T.text, fontWeight: 500 }}>May 12 – May 18, 2025</span>
+        <span style={{ color: T.muted, fontSize: 12 }}>▾</span>
+      </div>
+      <div style={{ height: 1, background: T.border }} />
+      <div style={{ fontSize: 10, color: T.muted,
+        fontFamily: "'JetBrains Mono'", letterSpacing: "0.08em" }}>Date Level</div>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <span style={{ fontFamily: "'Inter'", fontWeight: 800,
+          fontSize: 24, color: T.text }}>8,921</span>
+        <div style={{ display: "flex", gap: 4 }}>
+          <button style={{ background: T.s2, border: "1px solid " + T.border,
+            color: T.muted, borderRadius: 5, width: 24, height: 24,
+            cursor: "pointer", fontSize: 13 }}>▾</button>
+          <button style={{ background: T.s2, border: "1px solid " + T.border,
+            color: T.muted, borderRadius: 5, width: 24, height: 24,
+            cursor: "pointer", fontSize: 13 }}>⊞</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── OVERVIEW PAGE ────────────────────────────────────────────────
+function OverviewPage({ onViewAll }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+
+      {/* Top metric cards */}
+      <div style={{ display: "grid",
+        gridTemplateColumns: "repeat(4,1fr) 160px", gap: 10 }}>
+        <MetricCard icon="🏘" label="Active Farms"       value="4,532"  delta="12.4% vs last 7 days" color={T.g}      delay={0}    />
+        <MetricCard icon="🗄" label="Data Points (24h)"  value="2.45M"  delta="18.7% vs last 24h"    color={T.blue}   delay={0.05} />
+        <MetricCard icon="🧠" label="Predictions Made"   value="12,842" delta="9.3% vs last 24h"     color={T.purple} delay={0.1}  />
+        <MetricCard icon="⚠️" label="High Risk Alerts"   value="327"    delta="15.2% vs last 7 days"  color={T.red}    delay={0.15} />
+        <DateRangeWidget />
+      </div>
+
+      {/* Middle row — Heat Map + Intel Feed + Arch Status */}
+      <div style={{ display: "grid",
+        gridTemplateColumns: "1.4fr 1fr 1fr", gap: 12, minHeight: 420 }}>
+        <RiskHeatMap />
+        <IntelFeed onViewAll={onViewAll} />
+        <ArchStatus />
+      </div>
+
+      {/* Bottom row — Agents + Streams + Predictions */}
+      <div style={{ display: "grid",
+        gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
+        <AgentsStatus />
+        <DataStreams />
+        <PredictionsSummary />
+      </div>
+
+      {/* Recent Alerts */}
+      <RecentAlertsBar />
+    </div>
+  );
+}
+
+// ─── INTEL FEED PAGE (full) ───────────────────────────────────────
+function IntelFeedPage() {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+      <div style={{ fontFamily: "'Inter'", fontWeight: 700,
+        fontSize: 20, color: T.text }}>Intelligence Feed</div>
+      <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 14 }}>
+        <div style={{ background: T.card, border: "1px solid " + T.border, borderRadius: 12, padding: 16 }}>
+          <IntelFeed onViewAll={() => {}} />
+        </div>
+        <RecentAlertsBar />
+      </div>
+    </div>
+  );
+}
+
+// ─── GENERIC LAYER PAGE ───────────────────────────────────────────
+function LayerPage({ title, desc, children }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+      <div>
+        <div style={{ fontFamily: "'Inter'", fontWeight: 700,
+          fontSize: 20, color: T.text }}>{title}</div>
+        <div style={{ fontSize: 13, color: T.muted, marginTop: 3 }}>{desc}</div>
+      </div>
+      {children}
+    </div>
+  );
+}
+function KnowledgeGraphPanel() {
+  const NODE_CONFIG = {
+    county:  [T.blue,   "/knowledge icons/county.jfif", 52],
+    farm:    [T.g,      "/knowledge icons/kamau farm.jfif", 44],
+    crop:    [T.lime,   "/knowledge icons/tomatoes.jfif", 40],
+    disease: [T.red,    "/knowledge icons/late blight.jfif", 38],
+    weather: [T.teal,   "/knowledge icons/weather node.jfif", 42],
+    market:  [T.amber,  "/knowledge icons/market node.jfif", 38],
+    soil:    [T.orange, "/knowledge icons/soil node.jfif", 36],
+  };
+  const [selNode, setSelNode] = useState(null);
+  const [graph, setGraph] = useState(null);
+  const [loading, setLoading] = useState(true);
+ 
+  useEffect(() => {
+    fetch("/api/knowledge")
+      .then(r => r.json())
+      .then(d => { setGraph(d); setLoading(false); })
+      .catch(() => setLoading(false));
+  }, []);
+ 
+  // Fallback mock layout if API not yet wired
+  const nodes = graph?.nodes?.length ? graph.nodes.map((n, i) => ({
+    id: n.id, type: n.type, label: n.label, data: n.data,
+    x: 340 + 180 * Math.cos((i / graph.nodes.length) * 2 * Math.PI),
+    y: 230 + 180 * Math.sin((i / graph.nodes.length) * 2 * Math.PI),
+    img: n.img || NODE_CONFIG[n.type]?.[1] || "/knowledge icons/county.jfif",
+  })) : [
+    { id:"county_nakuru", type:"county", label:"Nakuru County", img:"/knowledge icons/county.jfif", x:340, y:230 },
+    { id:"weather_live",  type:"weather",label:"Live Weather",  img:"/knowledge icons/weather node.jfif", x:340, y:60  },
+    { id:"farm_1", type:"farm", label:"Kamau Farm",     img:"/knowledge icons/kamau farm.jfif", x:170, y:160 },
+    { id:"farm_2", type:"farm", label:"Wanjiku Shamba",  img:"/knowledge icons/wanjiku farm.jfif", x:170, y:300 },
+    { id:"farm_3", type:"farm", label:"Ochieng Farm",    img:"/knowledge icons/ochieng farm.jfif", x:510, y:160 },
+    { id:"farm_4", type:"farm", label:"Njeri Holdings",  img:"/knowledge icons/njeri farm.jfif", x:510, y:300 },
+    { id:"crop_1", type:"crop", label:"Tomatoes", img:"/knowledge icons/tomatoes.jfif", x:110, y:80  },
+    { id:"crop_2", type:"crop", label:"Maize",    img:"/knowledge icons/maize.jfif", x:110, y:380 },
+    { id:"dis_1",  type:"disease", label:"Late Blight",   img:"/knowledge icons/late blight.jfif", x:30,  y:30  },
+    { id:"dis_2",  type:"disease", label:"Bacterial Wilt",img:"/knowledge icons/bacterial wilt.jfif", x:600, y:380 },
+  ];
+ 
+  const edges = graph?.edges?.length ? graph.edges.map(e => ({ s: e.source, t: e.target, l: e.label })) : [
+    { s:"farm_1", t:"county_nakuru", l:"located in" },
+    { s:"farm_2", t:"county_nakuru", l:"located in" },
+    { s:"farm_3", t:"county_nakuru", l:"located in" },
+    { s:"farm_4", t:"county_nakuru", l:"located in" },
+    { s:"county_nakuru", t:"weather_live", l:"conditions" },
+    { s:"farm_1", t:"crop_1", l:"grows" },
+    { s:"farm_2", t:"crop_2", l:"grows" },
+    { s:"crop_1", t:"dis_1", l:"shows" },
+    { s:"farm_4", t:"dis_2", l:"shows" },
+  ];
+ 
+  if (loading) {
+    return (
+      <div style={{ background: T.card, border: "1px solid " + T.border,
+        borderRadius: 12, padding: 60, textAlign: "center" }}>
+        <Spinner size={28} />
+        <div style={{ marginTop: 12, color: T.muted, fontSize: 12 }}>
+          Loading knowledge graph from Supabase...
+        </div>
+      </div>
+    );
+  }
+ 
+  return (
+    <div style={{ display: "grid", gridTemplateColumns: "1fr 240px", gap: 12 }}>
+      <div style={{ background: T.card, border: "1px solid " + T.border,
+        borderRadius: 12, overflow: "hidden", position: "relative" }}>
+        <svg viewBox="0 0 680 460" style={{ width: "100%", height: 500 }}>
+          {edges.map((e, i) => {
+            const s = nodes.find(n => n.id === e.s), t = nodes.find(n => n.id === e.t);
+            if (!s || !t) return null;
+            const mx = (s.x + t.x) / 2, my = (s.y + t.y) / 2;
+            return (
+              <g key={i}>
+                <line x1={s.x} y1={s.y} x2={t.x} y2={t.y} stroke={T.border} strokeWidth="1" />
+                <text x={mx} y={my - 4} textAnchor="middle" fill={T.muted}
+                  fontSize="7" fontFamily="JetBrains Mono">{e.l}</text>
+              </g>
+            );
+          })}
+          {nodes.map(node => {
+            const [col, defaultIco, sz] = NODE_CONFIG[node.type] || [T.muted, "/knowledge icons/county.jfif", 36];
+            const ico = node.img || defaultIco;
+            const sel = selNode?.id === node.id;
+            const r = sz / 2;
+            return (
+              <g key={node.id} transform={"translate(" + node.x + "," + node.y + ")"}
+                onClick={() => setSelNode(node)} style={{ cursor: "pointer" }}>
+                {sel && <circle r={r + 10} fill="none" stroke={col} strokeWidth="1"
+                  opacity="0.4" style={{ animation: "ping 1.5s ease infinite" }} />}
+                <circle r={r} fill={sel ? col + "22" : T.card}
+                  stroke={col + (sel ? "cc" : "66")} strokeWidth="1.5" />
+                <image href={ico} x={-r * 0.6} y={-r * 0.6}
+                  width={r * 1.2} height={r * 1.2}
+                  style={{ userSelect: "none" }} clipPath="inset(0% round 50%)" />
+                <text y={r + 12} textAnchor="middle" fill={sel ? col : T.mutedL}
+                  fontSize="8" fontFamily="JetBrains Mono" style={{ userSelect: "none" }}>
+                  {node.label.length > 14 ? node.label.slice(0, 13) + "…" : node.label}
+                </text>
+              </g>
+            );
+          })}
+        </svg>
+        <div style={{ position: "absolute", bottom: 10, left: 10,
+          background: T.card + "ee", border: "1px solid " + T.border,
+          borderRadius: 8, padding: "8px 12px" }}>
+          {Object.entries(NODE_CONFIG).map(([type, [col, ico]]) => (
+            <div key={type} style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 3 }}>
+              <img src={ico} alt={type} style={{ width: 16, height: 16, objectFit: "contain" }} />
+              <div style={{ width: 7, height: 7, borderRadius: "50%", background: col }} />
+              <span style={{ fontFamily: "'JetBrains Mono'", fontSize: 8, color: T.mutedL }}>{type}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        <div style={{ background: T.card, border: "1px solid " + T.border,
+          borderRadius: 12, padding: 14 }}>
+          <div style={{ fontSize: 10, color: T.muted, fontFamily: "'JetBrains Mono'",
+            letterSpacing: "0.08em", marginBottom: 8 }}>GRAPH STATS</div>
+          {[["NODES", nodes.length], ["EDGES", edges.length],
+            ["SOURCE", graph?.nodes?.length ? "LIVE SUPABASE" : "MOCK"]].map(([l, v]) => (
+            <div key={l} style={{ display: "flex", justifyContent: "space-between",
+              padding: "5px 0", borderBottom: "1px solid " + T.border }}>
+              <span style={{ fontFamily: "'JetBrains Mono'", fontSize: 9, color: T.muted }}>{l}</span>
+              <span style={{ fontFamily: "'Inter'", fontSize: 12, color: T.g, fontWeight: 700 }}>{v}</span>
+            </div>
+          ))}
+        </div>
+        {selNode && (
+          <div style={{ background: T.card, border: "1px solid " + (NODE_CONFIG[selNode.type]?.[0] || T.g) + "55",
+            borderRadius: 12, padding: 14, animation: "fadeIn .3s ease" }}>
+            <div style={{ fontFamily: "'JetBrains Mono'", fontSize: 8,
+              color: NODE_CONFIG[selNode.type]?.[0] || T.g, letterSpacing: "0.1em",
+              marginBottom: 8 }}>{selNode.type.toUpperCase()}</div>
+            <div style={{ fontFamily: "'Inter'", fontWeight: 600, fontSize: 13,
+              color: T.text }}>{selNode.label}</div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+// ─── MAIN MACHINE DASHBOARD ───────────────────────────────────────
+export default function MachineDashboard({ onSwitchFarmer }) {
+  const [page, setPage] = useState("overview");
+
+  const pages = {
+    overview:   <OverviewPage onViewAll={() => setPage("intel")} />,
+    intel:      <IntelFeedPage />,
+    monitor:    <LayerPage title="System Monitor" desc="Real-time system health and performance"><AgentsStatus /><ArchStatus /></LayerPage>,
+    knowledge: <LayerPage title="Knowledge Graph" desc="Relationship intelligence across all farm entities"><KnowledgeGraphPanel /></LayerPage>,
+    agents:     <LayerPage title="AI Agents" desc="All specialist agents running in parallel"><AgentsStatus /></LayerPage>,
+    reasoning:  <LayerPage title="Reasoning Engine" desc="Core fusion engine outputs"><PredictionsSummary /></LayerPage>,
+    prediction: <LayerPage title="Prediction Engine" desc="7-day disease and yield forecasts"><PredictionsSummary /></LayerPage>,
+    decision:   <LayerPage title="Decision Engine" desc="Recommended actions across all farms"><RecentAlertsBar /></LayerPage>,
+    streams:    <LayerPage title="Data Streams" desc="Live ingestion from all 11 sources"><DataStreams /></LayerPage>,
+    riskmap:    <LayerPage title="Risk Map" desc="County-level disease and pest risk heatmap"><div style={{height:500}}><RiskHeatMap /></div></LayerPage>,
+    analytics:  <LayerPage title="Analytics" desc="Platform-wide agricultural intelligence metrics"><PredictionsSummary /><DataStreams /></LayerPage>,
+    reports:    <LayerPage title="Reports" desc="Exportable farm intelligence reports"><RecentAlertsBar /></LayerPage>,
+    users:    (
+  <LayerPage title="Users & Roles" desc="Platform user management">
+    <div style={{ background: T.card, border: "1px solid " + T.border, borderRadius: 12, padding: 18 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 14 }}>
+        <div style={{ fontFamily: "'Inter'", fontWeight: 600, fontSize: 16, color: T.text }}>Platform Users</div>
+        <button style={{ background: T.g, color: "#000", border: "none", borderRadius: 8, padding: "7px 14px", fontWeight: 600, fontSize: 12, cursor: "pointer" }}>+ Invite User</button>
+      </div>
+      {[
+        { name:"System Admin", role:"Super Administrator", email:"admin@agrimind.ai", status:"Active" },
+        { name:"John Kamau", role:"Farmer", email:"john.kamau@agrimind.ai", status:"Active" },
+        { name:"Grace Njeri", role:"Extension Officer", email:"grace.njeri@agrimind.ai", status:"Active" },
+        { name:"Peter Ochieng", role:"Cooperative Manager", email:"peter.ochieng@agrimind.ai", status:"Pending" },
+      ].map((u, i) => (
+        <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: "1px solid " + T.border }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <Avatar src="/avatars/user-default.png" alt={u.name} size={32} />
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 600, color: T.text }}>{u.name}</div>
+              <div style={{ fontSize: 11, color: T.muted }}>{u.email}</div>
+            </div>
+          </div>
+          <span style={{ fontSize: 11, color: T.mutedL }}>{u.role}</span>
+          <span style={{ background: u.status === "Active" ? T.g + "22" : T.amber + "22", color: u.status === "Active" ? T.g : T.amber, borderRadius: 4, padding: "2px 8px", fontSize: 10, fontWeight: 600 }}>{u.status}</span>
+        </div>
+      ))}
+    </div>
+  </LayerPage>
+),
+    integrations:<LayerPage title="Integrations" desc="Connected APIs and data sources"><DataStreams /></LayerPage>,
+    settings: (
+  <LayerPage title="Settings" desc="Platform configuration">
+    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+      {[
+        { label:"OpenWeather API Key", value:"●●●●●●●●●●a07a809dac", editable:true },
+        { label:"Supabase Project URL", value:"https://your-project.supabase.co", editable:true },
+        { label:"Notification Channels", value:"SMS, WhatsApp, Push, Email", editable:false },
+        { label:"Data Retention Period", value:"5 years", editable:false },
+        { label:"Auto-refresh Interval", value:"60 seconds", editable:true },
+      ].map((s, i) => (
+        <div key={i} style={{ background: T.card, border: "1px solid " + T.border, borderRadius: 10, padding: "14px 16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div>
+            <div style={{ fontSize: 13, fontWeight: 600, color: T.text, marginBottom: 3 }}>{s.label}</div>
+            <div style={{ fontSize: 12, color: T.muted, fontFamily: "'JetBrains Mono'" }}>{s.value}</div>
+          </div>
+          {s.editable && <button style={{ background: "none", border: "1px solid " + T.border, color: T.g, borderRadius: 6, padding: "5px 12px", fontSize: 11, cursor: "pointer" }}>Edit</button>}
+        </div>
+      ))}
+    </div>
+  </LayerPage>
+),
+    audit:      <LayerPage title="Audit Logs" desc="Complete activity log"><IntelFeedPage /></LayerPage>,
+  };
+
+  return (
+    <div style={{ display: "flex", minHeight: "100vh",
+      background: T.bg, color: T.text, fontFamily: "'Plus Jakarta Sans',sans-serif" }}>
+      <style>{STYLES}</style>
+      <MachineSidebar page={page} setPage={setPage} />
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+        <MachineHeader page={page} onSwitchFarmer={onSwitchFarmer} />
+        <main style={{ flex: 1, overflowY: "auto", padding: 18 }}>
+          {pages[page] || pages.overview}
+        </main>
+      </div>
+    </div>
+  );
+}
