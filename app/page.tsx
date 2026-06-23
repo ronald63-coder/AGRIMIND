@@ -72,7 +72,7 @@ export default function App() {
         fontSize: 36, fontWeight: 800, color: "#22c55e",
         marginBottom: 6, fontFamily: "'Inter'",
       }}>AgriMind</h1>
-      <p style={{ fontSize: 14, color: "#4d7a4d", marginBottom: 36 }}>
+      <p style={{ fontSize: 18, color: "#32b332", marginBottom: 36 }}>
         The Machine for Agriculture — Select your role to enter
       </p>
 
@@ -101,7 +101,7 @@ export default function App() {
                      u.id === "govt" ? "/avatars/govt.png" :
                      u.id === "investor" ? "/avatars/investor.png" : ""}
                 alt={u.label}
-                size={40}
+                size={70}
                 fallback={u.icon}
                 color={u.color}
               />
@@ -120,7 +120,7 @@ export default function App() {
         onClick={() => setPhase("platform")}
         style={{
           background: "#22c55e", color: "#000", border: "none",
-          borderRadius: 10, padding: "12px 32px", fontSize: 15,
+          borderRadius: 10, padding: "12px 32px", fontSize: 20,
           fontWeight: 700, cursor: "pointer", fontFamily: "'Inter'",
         }}>
         Enter AgriMind →

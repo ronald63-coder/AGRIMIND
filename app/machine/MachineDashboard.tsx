@@ -9,7 +9,7 @@ import {
 import FarmerDashboard from "@/FarmerDashboard";
 // ─── THEME ────────────────────────────────────────────────────────
 const T = {
-  bg:      "#0a0f0a",
+  bg:      "#1f351f",
   s1:      "#0d140d",
   s2:      "#111a11",
   card:    "#0f1a0f",
@@ -252,7 +252,7 @@ function ChartTip({ active, payload, label }) {
   return (
     <div style={{ background: T.s2, border: "1px solid " + T.border,
       borderRadius: 8, padding: "7px 11px",
-      fontFamily: "'JetBrains Mono'", fontSize: 11 }}>
+      fontFamily: "'JetBrains Mono'", fontSize: 15}}>
       <div style={{ color: T.muted, marginBottom: 3 }}>{label}</div>
       {payload.map((p, i) => (
         <div key={i} style={{ color: p.color || T.g }}>
@@ -462,7 +462,7 @@ function ArchStatus() {
       <div style={{ display: "flex", justifyContent: "space-between",
         alignItems: "center", marginBottom: 12 }}>
         <div style={{ fontFamily: "'Inter'", fontWeight: 600,
-          fontSize: 16, color: T.text }}>System Architecture Status</div>
+          fontSize: 20, color: T.text }}>System Architecture Status</div>
         <span style={{ fontSize: 10, color: T.g,
           fontFamily: "'JetBrains Mono'", fontWeight: 600 }}>
           All Layers Operational
@@ -477,7 +477,7 @@ function ArchStatus() {
             animation: "fadeUp .3s ease " + (i * .04) + "s both" }}>
             <span style={{ fontFamily: "'JetBrains Mono'", fontSize: 9,
               color: T.muted, minWidth: 48 }}>Layer {layer.n}</span>
-            <span style={{ fontSize: 11, color: T.text, flex: 1,
+            <span style={{ fontSize: 15, color: T.text, flex: 1,
               fontWeight: 500 }}>{layer.name}</span>
             <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
               <LiveDot color={layer.color} />
@@ -519,7 +519,7 @@ function AgentsStatus() {
       <div style={{ display: "flex", justifyContent: "space-between",
         alignItems: "center", marginBottom: 14 }}>
         <div style={{ fontFamily: "'Inter'", fontWeight: 600,
-          fontSize: 16, color: T.text }}>AI Agents Status</div>
+          fontSize: 20, color: T.text }}>AI Agents Status</div>
         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
           <LiveDot color={T.g} />
           <span style={{ fontSize: 11, color: T.g, fontWeight: 600 }}>
@@ -795,13 +795,13 @@ function MachineSidebar({ page, setPage }) {
       <div style={{ padding: "16px 16px 12px",
         borderBottom: "1px solid " + T.border }}>
         <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
-          <img src="/android-chrome-512x512.png" alt="AgriMind" style={{
-            width: 36, height: 36, borderRadius: 9,
+          <img src="/icons/logo.jpeg" alt="AgriMind" style={{
+            width: 65, height: 65, borderRadius: 30,
             objectFit: "cover"
           }} />
           <div>
             <div style={{ fontFamily: "'Inter'", fontWeight: 800,
-              fontSize: 16, color: T.text, letterSpacing: "-0.01em" }}>
+              fontSize: 20, color: T.text, letterSpacing: "-0.01em" }}>
               Agri<span style={{ color: T.g }}>Mind</span>
             </div>
             <div style={{ fontSize: 9, color: T.muted,
@@ -911,8 +911,8 @@ function MachineHeader({ page, onSwitchFarmer }) {
           borderRadius: 8, padding: "5px 10px", cursor: "pointer" }}>
           <Avatar src="/avatars/admin.png" alt="System Admin" size={28} />
           <div>
-            <div style={{ fontSize: 11, fontWeight: 600, color: T.text }}>System Admin</div>
-            <div style={{ fontSize: 9, color: T.muted }}>Super Administrator</div>
+            <div style={{ fontSize: 15, fontWeight: 600, color: T.text }}>System Admin</div>
+            <div style={{ fontSize: 10, color: T.muted }}>Super Administrator</div>
           </div>
           <span style={{ color: T.muted, fontSize: 10 }}>▾</span>
         </div>
@@ -922,7 +922,7 @@ function MachineHeader({ page, onSwitchFarmer }) {
           <button onClick={onSwitchFarmer}
             style={{ background: T.gdim, border: "1px solid " + T.g + "44",
               color: T.g, borderRadius: 8, padding: "6px 12px",
-              fontFamily: "'JetBrains Mono'", fontSize: 10,
+              fontFamily: "'JetBrains Mono'", fontSize: 15,
               fontWeight: 600, cursor: "pointer",
               letterSpacing: "0.06em" }}>
             🌿 Farmer View
@@ -1032,13 +1032,13 @@ function LayerPage({ title, desc, children }) {
 }
 function KnowledgeGraphPanel() {
   const NODE_CONFIG = {
-    county:  [T.blue,   "/knowledge icons/county.jfif", 52],
-    farm:    [T.g,      "/knowledge icons/kamau farm.jfif", 44],
-    crop:    [T.lime,   "/knowledge icons/tomatoes.jfif", 40],
-    disease: [T.red,    "/knowledge icons/late blight.jfif", 38],
-    weather: [T.teal,   "/knowledge icons/weather node.jfif", 42],
-    market:  [T.amber,  "/knowledge icons/market node.jfif", 38],
-    soil:    [T.orange, "/knowledge icons/soil node.jfif", 36],
+    county:  [T.blue,   "/knowledge icons/county.jfif", 80],
+    farm:    [T.g,      "/knowledge icons/kamau farm.jfif", 80],
+    crop:    [T.lime,   "/knowledge icons/tomatoes.jfif", 80],
+    disease: [T.red,    "/knowledge icons/late blight.jfif", 80],
+    weather: [T.teal,   "/knowledge icons/weather node.jfif", 80],
+    market:  [T.amber,  "/knowledge icons/market node.jfif", 80],
+    soil:    [T.orange, "/knowledge icons/soil node.jfif", 80],
   };
   const [selNode, setSelNode] = useState(null);
   const [graph, setGraph] = useState(null);
@@ -1054,8 +1054,8 @@ function KnowledgeGraphPanel() {
   // Fallback mock layout if API not yet wired
   const nodes = graph?.nodes?.length ? graph.nodes.map((n, i) => ({
     id: n.id, type: n.type, label: n.label, data: n.data,
-    x: 340 + 180 * Math.cos((i / graph.nodes.length) * 2 * Math.PI),
-    y: 230 + 180 * Math.sin((i / graph.nodes.length) * 2 * Math.PI),
+    x: 340 + 180 * Math.cos((i / graph.nodes.length) * 10* Math.PI),
+    y: 230 + 180 * Math.sin((i / graph.nodes.length) * 10 * Math.PI),
     img: n.img || NODE_CONFIG[n.type]?.[1] || "/knowledge icons/county.jfif",
   })) : [
     { id:"county_nakuru", type:"county", label:"Nakuru County", img:"/knowledge icons/county.jfif", x:340, y:230 },
