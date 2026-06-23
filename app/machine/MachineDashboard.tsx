@@ -142,28 +142,29 @@ const RISK_COLORS = {
 // ─── NAV SECTIONS ─────────────────────────────────────────────────
 const NAV = [
   { section:"OVERVIEW", items:[
-    { id:"overview",  icon:"/icons/machine-overview.jfif",  label:"Machine Overview" },
-    { id:"intel",     icon:"/icons/intel.jfif",     label:"Intelligence Feed" },
-    { id:"monitor",   icon:"/icons/monitor.jfif",   label:"System Monitor"    },
+    { id:"overview",  icon:"/icons/machine-overview.jpg",  label:"Machine Overview" },
+    { id:"intel",     icon:"/icons/intel.jpg",     label:"Intelligence Feed" },
+    { id:"monitor",   icon:"/icons/monitor.jpg",   label:"System Monitor"    },
   ]},
   { section:"INTELLIGENCE LAYERS", items:[
-    { id:"knowledge", icon:"/icons/knowledge.jfif",  label:"Knowledge Graph"  },
-    { id:"agents",    icon:"/icons/agents.jfif",     label:"AI Agents"         },
-    { id:"reasoning", icon:"/icons/reasoning.jfif",  label:"Reasoning Engine"  },
-    { id:"prediction",icon:"/icons/prediction.jfif", label:"Prediction Engine" },
-    { id:"decision",  icon:"/icons/decision.jfif",   label:"Decision Engine"   },
+    { id:"knowledge", icon:"/icons/knowledge.jpg",  label:"Knowledge Graph"  },
+    { id:"gnn",        icon:"/icons/gnn.png",        label:"Neural Network"   },
+    { id:"agents",    icon:"/icons/agents.jpg",     label:"AI Agents"         },
+    { id:"reasoning", icon:"/icons/reasoning.jpg",  label:"Reasoning Engine"  },
+    { id:"prediction",icon:"/icons/prediction.jpg", label:"Prediction Engine" },
+    { id:"decision",  icon:"/icons/decision.jpg",   label:"Decision Engine"   },
   ]},
   { section:"DATA & INSIGHTS", items:[
-    { id:"streams",   icon:"/icons/streams.jfif",   label:"Data Streams"      },
-    { id:"riskmap",   icon:"/icons/riskmap.jfif",   label:"Risk Map"          },
-    { id:"analytics", icon:"/icons/analytics.jfif", label:"Analytics"         },
-    { id:"reports",   icon:"/icons/reports.jfif",   label:"Reports"           },
+    { id:"streams",   icon:"/icons/streams.jpg",   label:"Data Streams"      },
+    { id:"riskmap",   icon:"/icons/riskmap.jpg",   label:"Risk Map"          },
+    { id:"analytics", icon:"/icons/analytics.jpg", label:"Analytics"         },
+    { id:"reports",   icon:"/icons/reports.jpg",   label:"Reports"           },
   ]},
   { section:"SYSTEM", items:[
-    { id:"users",     icon:"/icons/users.jfif",        label:"Users & Roles"     },
-    { id:"integrations",icon:"/icons/intergration.jfif",label:"Integrations"     },
-    { id:"settings",  icon:"/icons/settings.jfif",     label:"Settings"          },
-    { id:"audit",     icon:"/icons/audit.jfif",        label:"Audit Logs"        },
+    { id:"users",     icon:"/icons/users.jpg",        label:"Users & Roles"     },
+    { id:"integrations",icon:"/icons/integrations.jpg",label:"Integrations"     },
+    { id:"settings",  icon:"/icons/settings.jpg",     label:"Settings"          },
+    { id:"audit",     icon:"/icons/audit.jpg",        label:"Audit Logs"        },
   ]},
 ];
 
@@ -796,7 +797,7 @@ function MachineSidebar({ page, setPage }) {
         borderBottom: "1px solid " + T.border }}>
         <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
           <img src="/icons/logo.jpeg" alt="AgriMind" style={{
-            width: 65, height: 65, borderRadius: 30,
+            width: 99, height: 120, borderRadius: 30,
             objectFit: "cover"
           }} />
           <div>
@@ -804,7 +805,7 @@ function MachineSidebar({ page, setPage }) {
               fontSize: 20, color: T.text, letterSpacing: "-0.01em" }}>
               Agri<span style={{ color: T.g }}>Mind</span>
             </div>
-            <div style={{ fontSize: 9, color: T.muted,
+            <div style={{ fontSize: 12, color: T.muted,
               fontFamily: "'JetBrains Mono'" }}>Agricultural Intelligence Network</div>
           </div>
         </div>
@@ -833,7 +834,10 @@ function MachineSidebar({ page, setPage }) {
                     cursor: "pointer", fontSize: 12,
                     fontFamily: "'Inter'", fontWeight: active ? 600 : 400,
                     transition: "all .2s", textAlign: "left" }}>
-                  <img src={item.icon} alt="" style={{ width: 18, height: 18, objectFit: "contain", filter: "brightness(0) invert(1)" }} />
+                  <div style={{ position: "relative", width: 18, height: 18, flexShrink: 0 }}>
+                    <img src={item.icon} alt="" style={{ width: 18, height: 18, objectFit: "contain", position: "absolute", top: 0, left: 0, zIndex: 2 }} onError={(e) => { e.target.style.display = 'none'; }} />
+                    <div style={{ width: 18, height: 18, borderRadius: 4, background: active ? T.g + "33" : T.muted + "22", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, fontWeight: 700, color: active ? T.g : T.muted, position: "absolute", top: 0, left: 0, zIndex: 1 }}>{item.label.charAt(0)}</div>
+                  </div>
                   {item.label}
                 </button>
               );
@@ -1032,13 +1036,13 @@ function LayerPage({ title, desc, children }) {
 }
 function KnowledgeGraphPanel() {
   const NODE_CONFIG = {
-    county:  [T.blue,   "/knowledge icons/county.jfif", 80],
-    farm:    [T.g,      "/knowledge icons/kamau farm.jfif", 80],
-    crop:    [T.lime,   "/knowledge icons/tomatoes.jfif", 80],
-    disease: [T.red,    "/knowledge icons/late blight.jfif", 80],
-    weather: [T.teal,   "/knowledge icons/weather node.jfif", 80],
-    market:  [T.amber,  "/knowledge icons/market node.jfif", 80],
-    soil:    [T.orange, "/knowledge icons/soil node.jfif", 80],
+    county:  [T.blue,   "/knowledge%20icons/county.jfif", 52],
+    farm:    [T.g,      "/knowledge%20icons/kamau%20farm.jfif", 44],
+    crop:    [T.lime,   "/knowledge%20icons/tomatoes.jfif", 40],
+    disease: [T.red,    "/knowledge%20icons/late%20blight.jfif", 38],
+    weather: [T.teal,   "/knowledge%20icons/weather%20node.jfif", 42],
+    market:  [T.amber,  "/knowledge%20icons/market%20node.jfif", 38],
+    soil:    [T.orange, "/knowledge%20icons/soil%20node.jfif", 36],
   };
   const [selNode, setSelNode] = useState(null);
   const [graph, setGraph] = useState(null);
@@ -1054,20 +1058,20 @@ function KnowledgeGraphPanel() {
   // Fallback mock layout if API not yet wired
   const nodes = graph?.nodes?.length ? graph.nodes.map((n, i) => ({
     id: n.id, type: n.type, label: n.label, data: n.data,
-    x: 340 + 180 * Math.cos((i / graph.nodes.length) * 10* Math.PI),
+    x: 340 + 180 * Math.cos((i / graph.nodes.length) *10* Math.PI),
     y: 230 + 180 * Math.sin((i / graph.nodes.length) * 10 * Math.PI),
-    img: n.img || NODE_CONFIG[n.type]?.[1] || "/knowledge icons/county.jfif",
+    img: n.img || NODE_CONFIG[n.type]?.[1] || "/knowledge%20icons/county.jfif",
   })) : [
-    { id:"county_nakuru", type:"county", label:"Nakuru County", img:"/knowledge icons/county.jfif", x:340, y:230 },
-    { id:"weather_live",  type:"weather",label:"Live Weather",  img:"/knowledge icons/weather node.jfif", x:340, y:60  },
-    { id:"farm_1", type:"farm", label:"Kamau Farm",     img:"/knowledge icons/kamau farm.jfif", x:170, y:160 },
-    { id:"farm_2", type:"farm", label:"Wanjiku Shamba",  img:"/knowledge icons/wanjiku farm.jfif", x:170, y:300 },
-    { id:"farm_3", type:"farm", label:"Ochieng Farm",    img:"/knowledge icons/ochieng farm.jfif", x:510, y:160 },
-    { id:"farm_4", type:"farm", label:"Njeri Holdings",  img:"/knowledge icons/njeri farm.jfif", x:510, y:300 },
-    { id:"crop_1", type:"crop", label:"Tomatoes", img:"/knowledge icons/tomatoes.jfif", x:110, y:80  },
-    { id:"crop_2", type:"crop", label:"Maize",    img:"/knowledge icons/maize.jfif", x:110, y:380 },
-    { id:"dis_1",  type:"disease", label:"Late Blight",   img:"/knowledge icons/late blight.jfif", x:30,  y:30  },
-    { id:"dis_2",  type:"disease", label:"Bacterial Wilt",img:"/knowledge icons/bacterial wilt.jfif", x:600, y:380 },
+    { id:"county_nakuru", type:"county", label:"Nakuru County", img:"/knowledge%20icons/county.jfif", x:340, y:230 },
+    { id:"weather_live",  type:"weather",label:"Live Weather",  img:"/knowledge%20icons/weather%20node.jfif", x:340, y:60  },
+    { id:"farm_1", type:"farm", label:"Kamau Farm",     img:"/knowledge%20icons/kamau%20farm.jfif", x:170, y:160 },
+    { id:"farm_2", type:"farm", label:"Wanjiku Shamba",  img:"/knowledge%20icons/wanjiku%20farm.jfif", x:170, y:300 },
+    { id:"farm_3", type:"farm", label:"Ochieng Farm",    img:"/knowledge%20icons/ochieng%20farm.jfif", x:510, y:160 },
+    { id:"farm_4", type:"farm", label:"Njeri Holdings",  img:"/knowledge%20icons/njeri%20farm.jfif", x:510, y:300 },
+    { id:"crop_1", type:"crop", label:"Tomatoes", img:"/knowledge%20icons/tomatoes.jfif", x:110, y:80  },
+    { id:"crop_2", type:"crop", label:"Maize",    img:"/knowledge%20icons/maize.jfif", x:110, y:380 },
+    { id:"dis_1",  type:"disease", label:"Late Blight",   img:"/knowledge%20icons/late%20blight.jfif", x:30,  y:30  },
+    { id:"dis_2",  type:"disease", label:"Bacterial Wilt",img:"/knowledge%20icons/bacterial%20wilt.jfif", x:600, y:380 },
   ];
  
   const edges = graph?.edges?.length ? graph.edges.map(e => ({ s: e.source, t: e.target, l: e.label })) : [
@@ -1112,7 +1116,7 @@ function KnowledgeGraphPanel() {
             );
           })}
           {nodes.map(node => {
-            const [col, defaultIco, sz] = NODE_CONFIG[node.type] || [T.muted, "/knowledge icons/county.jfif", 36];
+            const [col, defaultIco, sz] = NODE_CONFIG[node.type] || [T.muted, "/knowledge%20icons/county.jfif", 36];
             const ico = node.img || defaultIco;
             const sel = selNode?.id === node.id;
             const r = sz / 2;
@@ -1174,6 +1178,208 @@ function KnowledgeGraphPanel() {
     </div>
   );
 }
+ 
+function GNNVisualizationPanel() {
+  const [pulse, setPulse] = useState(0);
+  const [selLayer, setSelLayer] = useState(null);
+  const [patterns, setPatterns] = useState([
+    { id:1, label:"Humidity > 78% for 3 days → Fungal risk",        confidence:91, strength:"strong",   color:T.red    },
+    { id:2, label:"Highland elevation + cool_dry → Late Blight",    confidence:87, strength:"strong",   color:T.red    },
+    { id:3, label:"Rainfall spike + flowering stage → Pest surge",  confidence:74, strength:"moderate", color:T.amber  },
+    { id:4, label:"Market price rise + harvest window → Sell now",  confidence:82, strength:"strong",   color:T.g     },
+    { id:5, label:"Soil moisture <40% + fruiting → Yield drop risk",confidence:69, strength:"moderate", color:T.orange},
+  ]);
+ 
+  // Animate the "learning pulse" traveling through the network
+  useEffect(() => {
+    const iv = setInterval(() => setPulse(p => (p + 1) % 100), 60);
+    return () => clearInterval(iv);
+  }, []);
+ 
+  // GNN layer architecture (3 hidden layers, matches diagram concept)
+  const GNN_LAYERS = [
+    { id:"input",  label:"Input Layer",      nodes:8,  desc:"Raw entity embeddings from Knowledge Graph", color:T.blue   },
+    { id:"gcn1",   label:"GCN Layer 1",      nodes:12, desc:"Local neighborhood aggregation",              color:T.purple },
+    { id:"gat",    label:"Attention Layer",  nodes:10, desc:"Differentially weighted relationships",       color:T.teal   },
+    { id:"gcn2",   label:"GCN Layer 2",      nodes:8,  desc:"Higher-order pattern composition",            color:T.lime   },
+    { id:"output", label:"Output Layer",     nodes:6,  desc:"Learned risk + opportunity embeddings",       color:T.g      },
+  ];
+ 
+  // Generate node positions for the network diagram
+  const W = 680, H = 320;
+  const layerX = GNN_LAYERS.map((_, i) => 60 + i * ((W - 120) / (GNN_LAYERS.length - 1)));
+ 
+  function nodeY(count, idx) {
+    const spacing = (H - 60) / (count + 1);
+    return 30 + spacing * (idx + 1);
+  }
+ 
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+ 
+      {/* Top metric strip */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 10 }}>
+        {[
+          { l:"GRAPH EMBEDDINGS", v:"2,048-dim", c:T.purple },
+          { l:"TRAINING EPOCHS",  v:"1,240",     c:T.blue   },
+          { l:"PATTERN CONFIDENCE",v:"84.6%",    c:T.g      },
+          { l:"LINK PREDICTION ACC",v:"91.2%",   c:T.lime   },
+        ].map((m, i) => (
+          <div key={m.l} style={{ background: T.card, border: "1px solid " + T.border,
+            borderRadius: 12, padding: "14px 16px",
+            animation: "fadeUp .4s ease " + (i * .05) + "s both" }}>
+            <div style={{ fontSize: 10, color: T.muted, fontFamily: "'JetBrains Mono'",
+              letterSpacing: "0.06em", marginBottom: 6 }}>{m.l}</div>
+            <div style={{ fontFamily: "'Inter'", fontWeight: 800, fontSize: 22, color: m.c }}>{m.v}</div>
+          </div>
+        ))}
+      </div>
+ 
+      {/* Network architecture visualization */}
+      <div style={{ background: T.card, border: "1px solid " + T.border,
+        borderRadius: 12, padding: 16 }}>
+        <div style={{ display: "flex", justifyContent: "space-between",
+          alignItems: "center", marginBottom: 12 }}>
+          <div>
+            <div style={{ fontFamily: "'Inter'", fontWeight: 600, fontSize: 16, color: T.text }}>
+              Graph Neural Network Architecture
+            </div>
+            <div style={{ fontSize: 11, color: T.muted, marginTop: 1 }}>
+              Learning patterns across the agricultural knowledge graph
+            </div>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <LiveDot color={T.purple} />
+            <span style={{ fontSize: 10, color: T.purple, fontFamily: "'JetBrains Mono'" }}>
+              Training Active
+            </span>
+          </div>
+        </div>
+ 
+        <div style={{ background: T.s1, borderRadius: 10, overflow: "hidden" }}>
+          <svg viewBox={"0 0 " + W + " " + H} style={{ width: "100%", height: 300 }}>
+            {/* Connections between layers */}
+            {GNN_LAYERS.slice(0, -1).map((layer, li) => {
+              const nextLayer = GNN_LAYERS[li + 1];
+              return Array.from({ length: layer.nodes }).map((_, ni) =>
+                Array.from({ length: nextLayer.nodes }).map((_, nj) => {
+                  const x1 = layerX[li], y1 = nodeY(layer.nodes, ni);
+                  const x2 = layerX[li + 1], y2 = nodeY(nextLayer.nodes, nj);
+                  // Highlight a traveling subset based on pulse position
+                  const isActive = (ni + nj + li * 3) % 17 === Math.floor(pulse / 6) % 17;
+                  return (
+                    <line key={li + "_" + ni + "_" + nj}
+                      x1={x1} y1={y1} x2={x2} y2={y2}
+                      stroke={isActive ? layer.color + "aa" : T.border}
+                      strokeWidth={isActive ? 1.4 : 0.4}
+                      opacity={isActive ? 1 : 0.5} />
+                  );
+                })
+              );
+            })}
+ 
+            {/* Nodes */}
+            {GNN_LAYERS.map((layer, li) => (
+              <g key={layer.id}
+                onClick={() => setSelLayer(layer)}
+                style={{ cursor: "pointer" }}>
+                {Array.from({ length: layer.nodes }).map((_, ni) => {
+                  const x = layerX[li], y = nodeY(layer.nodes, ni);
+                  const sel = selLayer?.id === layer.id;
+                  return (
+                    <circle key={ni} cx={x} cy={y}
+                      r={sel ? 7 : 5}
+                      fill={layer.color + (sel ? "ff" : "cc")}
+                      stroke={layer.color}
+                      strokeWidth={sel ? 2 : 1}
+                      style={{ transition: "all .2s",
+                        filter: sel ? "drop-shadow(0 0 6px " + layer.color + ")" : "none" }} />
+                  );
+                })}
+                <text x={layerX[li]} y={H - 8} textAnchor="middle"
+                  fill={selLayer?.id === layer.id ? layer.color : T.mutedL}
+                  fontSize="9" fontFamily="JetBrains Mono" fontWeight="600">
+                  {layer.label}
+                </text>
+              </g>
+            ))}
+          </svg>
+        </div>
+ 
+        {selLayer && (
+          <div style={{ marginTop: 10, background: T.s1,
+            border: "1px solid " + selLayer.color + "44",
+            borderLeft: "3px solid " + selLayer.color,
+            borderRadius: 8, padding: "10px 14px", animation: "fadeIn .3s ease" }}>
+            <div style={{ fontFamily: "'JetBrains Mono'", fontSize: 9,
+              color: selLayer.color, letterSpacing: "0.08em", marginBottom: 4 }}>
+              {selLayer.label.toUpperCase()} · {selLayer.nodes} NEURONS
+            </div>
+            <div style={{ fontSize: 12, color: T.text }}>{selLayer.desc}</div>
+          </div>
+        )}
+ 
+        <div style={{ display: "flex", gap: 14, marginTop: 12, flexWrap: "wrap" }}>
+          {GNN_LAYERS.map(l => (
+            <div key={l.id} style={{ display: "flex", alignItems: "center", gap: 5 }}>
+              <div style={{ width: 8, height: 8, borderRadius: "50%", background: l.color }} />
+              <span style={{ fontSize: 9, color: T.muted, fontFamily: "'JetBrains Mono'" }}>{l.label}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+ 
+      {/* Discovered patterns */}
+      <div style={{ background: T.card, border: "1px solid " + T.border,
+        borderRadius: 12, padding: 16 }}>
+        <div style={{ display: "flex", justifyContent: "space-between",
+          alignItems: "center", marginBottom: 14 }}>
+          <div style={{ fontFamily: "'Inter'", fontWeight: 600, fontSize: 16, color: T.text }}>
+            Patterns Learned From the Graph
+          </div>
+          <span style={{ fontSize: 10, color: T.muted, fontFamily: "'JetBrains Mono'" }}>
+            Updated continuously
+          </span>
+        </div>
+ 
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          {patterns.map((p, i) => (
+            <div key={p.id} style={{ display: "flex", alignItems: "center", gap: 12,
+              background: T.s1, border: "1px solid " + T.border,
+              borderLeft: "3px solid " + p.color,
+              borderRadius: 8, padding: "10px 14px",
+              animation: "fadeUp .4s ease " + (i * .06) + "s both" }}>
+              <div style={{ fontSize: 16 }}>
+                {p.strength === "strong" ? "🔗" : "🧩"}
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 13, color: T.text, fontWeight: 500 }}>{p.label}</div>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 3 }}>
+                <span style={{ fontFamily: "'Inter'", fontWeight: 700, fontSize: 14, color: p.color }}>
+                  {p.confidence}%
+                </span>
+                <span style={{ fontSize: 9, color: T.muted, fontFamily: "'JetBrains Mono'",
+                  textTransform: "uppercase" }}>{p.strength}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+ 
+      {/* Explanation note */}
+      <div style={{ background: T.gdim, border: "1px solid " + T.g + "33",
+        borderRadius: 10, padding: "12px 16px" }}>
+        <div style={{ fontSize: 12, color: T.mutedL, lineHeight: 1.6 }}>
+          The Graph Neural Network learns directly from the relationships in the Knowledge Graph —
+          farm-to-county, crop-to-disease, weather-to-outcome — discovering patterns that individual
+          AI agents cannot see on their own. These learned patterns feed forward into the Multi-Agent
+          Reasoning System, sharpening every prediction with structural context from the entire network.
+        </div>
+      </div>
+    </div>
+  );
+}
 // ─── MAIN MACHINE DASHBOARD ───────────────────────────────────────
 export default function MachineDashboard({ onSwitchFarmer }) {
   const [page, setPage] = useState("overview");
@@ -1183,6 +1389,7 @@ export default function MachineDashboard({ onSwitchFarmer }) {
     intel:      <IntelFeedPage />,
     monitor:    <LayerPage title="System Monitor" desc="Real-time system health and performance"><AgentsStatus /><ArchStatus /></LayerPage>,
     knowledge: <LayerPage title="Knowledge Graph" desc="Relationship intelligence across all farm entities"><KnowledgeGraphPanel /></LayerPage>,
+    gnn:       <LayerPage title="Graph Neural Network" desc="Learning patterns across the agricultural knowledge graph"><GNNVisualizationPanel /></LayerPage>,
     agents:     <LayerPage title="AI Agents" desc="All specialist agents running in parallel"><AgentsStatus /></LayerPage>,
     reasoning:  <LayerPage title="Reasoning Engine" desc="Core fusion engine outputs"><PredictionsSummary /></LayerPage>,
     prediction: <LayerPage title="Prediction Engine" desc="7-day disease and yield forecasts"><PredictionsSummary /></LayerPage>,

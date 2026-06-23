@@ -1,7 +1,7 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback , useRef} from "react";
 import {
   AreaChart, Area, XAxis, YAxis, Tooltip,
-  ResponsiveContainer, BarChart, Bar, Cell
+  ResponsiveContainer, BarChart, Bar, Cell ,CartesianGrid
 } from "recharts";
 
 // ─── THEME ────────────────────────────────────────────────────────
@@ -81,6 +81,47 @@ const MARKET_MOCK = {
     { day: "Fri", price: 38 }, { day: "Sat", price: 39 },
     { day: "Now", price: 38 },
   ],
+};
+
+const CROP_PORTFOLIO = [
+  { crop: "Tomatoes", price: 38, trend: "+12%", trendUp: true, volume: "2.4K kg", bestMarket: "Nairobi", confidence: 94 },
+  { crop: "Maize", price: 28, trend: "-3%", trendUp: false, volume: "5.1K kg", bestMarket: "Eldoret", confidence: 87 },
+  { crop: "Beans", price: 85, trend: "+8%", trendUp: true, volume: "800 kg", bestMarket: "Nakuru", confidence: 91 },
+  { crop: "Potatoes", price: 42, trend: "+5%", trendUp: true, volume: "3.2K kg", bestMarket: "Nairobi", confidence: 89 },
+  { crop: "Onions", price: 55, trend: "-1%", trendUp: false, volume: "1.5K kg", bestMarket: "Eldoret", confidence: 85 },
+];
+
+const MARKET_COMPARISON = [
+  { market: "Nakuru Municipal", distance: "2 km", tomatoes: 38, maize: 30, beans: 82, potatoes: 40, onions: 58, trend: "stable" },
+  { market: "Nairobi Wakulima", distance: "156 km", tomatoes: 45, maize: 26, beans: 95, potatoes: 48, onions: 52, trend: "rising" },
+  { market: "Eldoret", distance: "180 km", tomatoes: 35, maize: 32, beans: 78, potatoes: 38, onions: 60, trend: "stable" },
+  { market: "Kisumu", distance: "210 km", tomatoes: 40, maize: 28, beans: 88, potatoes: 44, onions: 55, trend: "falling" },
+];
+
+const PRICE_HISTORY_FORECAST = [
+  { day: "Mon", actual: 32, forecast: null },
+  { day: "Tue", actual: 34, forecast: null },
+  { day: "Wed", actual: 33, forecast: null },
+  { day: "Thu", actual: 36, forecast: null },
+  { day: "Fri", actual: 38, forecast: null },
+  { day: "Sat", actual: 39, forecast: null },
+  { day: "Sun", actual: 38, forecast: null },
+  { day: "Mon+1", actual: null, forecast: 40 },
+  { day: "Tue+1", actual: null, forecast: 42 },
+  { day: "Wed+1", actual: null, forecast: 44 },
+  { day: "Thu+1", actual: null, forecast: 43 },
+  { day: "Fri+1", actual: null, forecast: 45 },
+  { day: "Sat+1", actual: null, forecast: 44 },
+  { day: "Sun+1", actual: null, forecast: 46 },
+];
+
+const SUPPLY_DEMAND_SIGNAL = {
+  crop: "Tomatoes",
+  signal: "FAVORABLE",
+  supplyChange: "-18%",
+  demandChange: "+12%",
+  insight: "Tomato supply dropping 18% regionally — favorable for sellers. Prices expected to peak at KSh 46/kg in 7 days.",
+  confidence: 94,
 };
 
 const QUICK_ACTIONS = [
@@ -777,36 +818,168 @@ function RecommendationsPage({ data }) {
 
 // ─── MARKET PAGE ──────────────────────────────────────────────────
 function MarketPage({ data }) {
+  const [selectedCrop, setSelectedCrop] = useState("Tomatoes");
+  const selectedData = CROP_PORTFOLIO.find(c => c.crop === selectedCrop) || CROP_PORTFOLIO[0];
+
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 16, maxWidth: 860, margin: "0 auto" }}>
-      <h2 style={{ fontFamily: "'Poppins'", fontWeight: 700, fontSize: 22, color: F.text }}>Market Prices</h2>
-      <div style={{ background: F.card, borderRadius: 16, padding: 24, boxShadow: "0 2px 12px #00000010" }}>
-        <div style={{ fontFamily: "'Poppins'", fontWeight: 600, fontSize: 18, color: F.text, marginBottom: 4 }}>{MARKET_MOCK.crop}</div>
-        <div style={{ display: "flex", alignItems: "baseline", gap: 12, marginBottom: 8 }}>
-          <span style={{ fontFamily: "'Poppins'", fontWeight: 800, fontSize: 42, color: F.text }}>KSh {MARKET_MOCK.price}</span>
-          <span style={{ fontSize: 18, color: F.muted }}>/kg</span>
-          <span style={{ fontSize: 16, color: F.green, fontWeight: 600 }}>{MARKET_MOCK.trend} ↑</span>
+    <div style={{ display: "flex", flexDirection: "column", gap: 16, maxWidth: 900, margin: "0 auto" }}>
+      <h2 style={{ fontFamily: "'Poppins'", fontWeight: 700, fontSize: 24, color: F.text }}>Market Intelligence</h2>
+
+      {/* Supply/Demand Signal Banner */}
+      <div style={{ background: SUPPLY_DEMAND_SIGNAL.signal === "FAVORABLE" ? "#f0fdf4" : "#fffbeb",
+        border: "1px solid " + (SUPPLY_DEMAND_SIGNAL.signal === "FAVORABLE" ? F.green + "44" : F.amber + "44"),
+        borderRadius: 14, padding: 18, display: "flex", alignItems: "center", gap: 14 }}>
+        <div style={{ width: 48, height: 48, borderRadius: "50%",
+          background: SUPPLY_DEMAND_SIGNAL.signal === "FAVORABLE" ? F.greenBg : F.amberBg,
+          display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, flexShrink: 0 }}>
+          {SUPPLY_DEMAND_SIGNAL.signal === "FAVORABLE" ? "📈" : "⚠️"}
         </div>
-        <p style={{ fontSize: 14, color: F.muted, marginBottom: 20 }}>{data?.market_insight || "Prices trending upward — best time to sell in 7-10 days"}</p>
-        <ResponsiveContainer width="100%" height={180}>
-          <AreaChart data={MARKET_MOCK.data}>
+        <div style={{ flex: 1 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+            <span style={{ fontFamily: "'Poppins'", fontWeight: 700, fontSize: 14,
+              color: SUPPLY_DEMAND_SIGNAL.signal === "FAVORABLE" ? F.green : F.amber }}>
+              {SUPPLY_DEMAND_SIGNAL.signal} — {SUPPLY_DEMAND_SIGNAL.confidence}% Confidence
+            </span>
+          </div>
+          <p style={{ fontSize: 14, color: F.text, lineHeight: 1.6 }}>{SUPPLY_DEMAND_SIGNAL.insight}</p>
+          <div style={{ display: "flex", gap: 16, marginTop: 8 }}>
+            <span style={{ fontSize: 12, color: F.muted }}>
+              <strong style={{ color: F.red }}>{SUPPLY_DEMAND_SIGNAL.supplyChange}</strong> Supply
+            </span>
+            <span style={{ fontSize: 12, color: F.muted }}>
+              <strong style={{ color: F.green }}>{SUPPLY_DEMAND_SIGNAL.demandChange}</strong> Demand
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Crop Portfolio */}
+      <div>
+        <h3 style={{ fontFamily: "'Poppins'", fontWeight: 600, fontSize: 16, color: F.text, marginBottom: 12 }}>Your Crop Portfolio</h3>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 10 }}>
+          {CROP_PORTFOLIO.map((c, i) => {
+            const active = selectedCrop === c.crop;
+            return (
+              <button key={i} onClick={() => setSelectedCrop(c.crop)}
+                style={{ background: active ? F.greenBg : F.card,
+                  border: "2px solid " + (active ? F.green + "66" : F.border),
+                  borderRadius: 14, padding: 16, cursor: "pointer",
+                  textAlign: "left", transition: "all .2s", position: "relative" }}>
+                <div style={{ fontSize: 12, color: F.muted, marginBottom: 6 }}>{c.crop}</div>
+                <div style={{ fontFamily: "'Poppins'", fontWeight: 800, fontSize: 24, color: F.text, marginBottom: 4 }}>
+                  KSh {c.price}
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 6 }}>
+                  <span style={{ fontSize: 12, color: c.trendUp ? F.green : F.red, fontWeight: 600 }}>
+                    {c.trendUp ? "▲" : "▼"} {c.trend}
+                  </span>
+                </div>
+                <div style={{ fontSize: 11, color: F.muted }}>Vol: {c.volume}</div>
+                <div style={{ fontSize: 11, color: F.green, marginTop: 2 }}>Best: {c.bestMarket}</div>
+                {active && (
+                  <div style={{ position: "absolute", top: 8, right: 8, width: 8, height: 8,
+                    borderRadius: "50%", background: F.green }} />
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Price History + Forecast Chart */}
+      <div style={{ background: F.card, borderRadius: 16, padding: 24, boxShadow: "0 2px 12px #00000010" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+          <div>
+            <div style={{ fontFamily: "'Poppins'", fontWeight: 600, fontSize: 16, color: F.text }}>
+              {selectedCrop} — Price History & Forecast
+            </div>
+            <div style={{ fontSize: 12, color: F.muted, marginTop: 2 }}>
+              Solid = actual · Dashed = AI predicted
+            </div>
+          </div>
+          <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+              <div style={{ width: 12, height: 3, background: F.green, borderRadius: 2 }} />
+              <span style={{ fontSize: 11, color: F.muted }}>Actual</span>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+              <div style={{ width: 12, height: 3, borderTop: "2px dashed " + F.blue, borderRadius: 2 }} />
+              <span style={{ fontSize: 11, color: F.muted }}>Forecast</span>
+            </div>
+          </div>
+        </div>
+        <ResponsiveContainer width="100%" height={220}>
+          <AreaChart data={PRICE_HISTORY_FORECAST}>
             <defs>
-              <linearGradient id="mG2" x1="0" y1="0" x2="0" y2="1">
+              <linearGradient id="actualG" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor={F.green} stopOpacity={0.25} />
                 <stop offset="95%" stopColor={F.green} stopOpacity={0} />
               </linearGradient>
+              <linearGradient id="forecastG" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor={F.blue} stopOpacity={0.15} />
+                <stop offset="95%" stopColor={F.blue} stopOpacity={0} />
+              </linearGradient>
             </defs>
             <CartesianGrid strokeDasharray="3 3" stroke={F.border} vertical={false} />
-            <XAxis dataKey="day" tick={{ fill: F.muted, fontSize: 11 }} axisLine={false} tickLine={false} />
+            <XAxis dataKey="day" tick={{ fill: F.muted, fontSize: 10 }} axisLine={false} tickLine={false} />
             <YAxis tick={{ fill: F.muted, fontSize: 11 }} axisLine={false} tickLine={false} />
-            <Tooltip />
-            <Area type="monotone" dataKey="price" name="KSh/kg" stroke={F.green} fill="url(#mG2)" strokeWidth={2.5} dot={{ fill: F.green, r: 4 }} />
+            <Tooltip contentStyle={{ borderRadius: 10, border: "1px solid " + F.border, fontSize: 12 }} />
+            <Area type="monotone" dataKey="actual" name="Actual KSh/kg" stroke={F.green} fill="url(#actualG)" strokeWidth={2.5} dot={{ fill: F.green, r: 4 }} connectNulls={false} />
+            <Area type="monotone" dataKey="forecast" name="Forecast KSh/kg" stroke={F.blue} fill="url(#forecastG)" strokeWidth={2.5} strokeDasharray="6 4" dot={{ fill: F.blue, r: 4 }} connectNulls={false} />
           </AreaChart>
         </ResponsiveContainer>
       </div>
+
+      {/* Nearby Markets Comparison */}
+      <div style={{ background: F.card, borderRadius: 16, padding: 24, boxShadow: "0 2px 12px #00000010" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+          <div style={{ fontFamily: "'Poppins'", fontWeight: 600, fontSize: 16, color: F.text }}>
+            Where to Sell — Market Comparison
+          </div>
+          <span style={{ fontSize: 12, color: F.muted }}>Prices for {selectedCrop} (KSh/kg)</span>
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {MARKET_COMPARISON.map((m, i) => {
+            const price = m[selectedCrop.toLowerCase()] || m.tomatoes;
+            const isBest = price === Math.max(...MARKET_COMPARISON.map(x => x[selectedCrop.toLowerCase()] || x.tomatoes));
+            return (
+              <div key={i} style={{ display: "flex", alignItems: "center", gap: 12,
+                padding: "12px 16px", background: isBest ? F.greenBg : F.bg,
+                border: "1px solid " + (isBest ? F.green + "44" : F.border),
+                borderRadius: 12, transition: "all .2s" }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontFamily: "'Poppins'", fontWeight: 600, fontSize: 14, color: F.text }}>{m.market}</div>
+                  <div style={{ fontSize: 11, color: F.muted }}>{m.distance} away · {m.trend}</div>
+                </div>
+                <div style={{ textAlign: "right" }}>
+                  <div style={{ fontFamily: "'Poppins'", fontWeight: 800, fontSize: 20, color: isBest ? F.green : F.text }}>
+                    KSh {price}
+                  </div>
+                  <div style={{ fontSize: 11, color: F.muted }}>/kg</div>
+                </div>
+                {isBest && (
+                  <div style={{ background: F.green, color: "#fff", borderRadius: 20,
+                    padding: "4px 12px", fontSize: 11, fontWeight: 700 }}>
+                    BEST PRICE
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+        <div style={{ marginTop: 14, padding: 12, background: F.greenBg, borderRadius: 10, border: "1px solid " + F.green + "33" }}>
+          <div style={{ fontSize: 13, color: F.text, fontWeight: 500 }}>
+            💡 AI Recommendation: Transport to <strong>Nairobi Wakulima</strong> for +18% revenue on {selectedCrop}. Net gain after transport: ~KSh 3,200 for your current stock.
+          </div>
+        </div>
+      </div>
+
+      {/* Original simple market card (kept for reference) */}
       <div style={{ background: F.greenBg, border: "1px solid " + F.green + "44", borderRadius: 14, padding: 18 }}>
         <div style={{ fontFamily: "'Poppins'", fontWeight: 600, fontSize: 15, color: F.green, marginBottom: 6 }}>💡 AI Market Advice</div>
-        <p style={{ fontSize: 14, color: F.text, lineHeight: 1.7 }}>Based on current trends, hold your harvest for 7-10 more days. Prices are expected to peak at KSh 44-48/kg as supply drops in your region.</p>
+        <p style={{ fontSize: 14, color: F.text, lineHeight: 1.7 }}>
+          Based on current trends, hold your {selectedCrop} harvest for 7-10 more days. Prices are expected to peak at KSh 46/kg as supply drops 18% in your region. Best window: {selectedData.bestTime}.
+        </p>
       </div>
     </div>
   );
