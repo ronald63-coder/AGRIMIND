@@ -492,7 +492,8 @@ function DashboardPage({ data, loading, onMarkDone, done, setPage }) {
                   padding: "10px 14px" }}>
                   <div style={{ fontSize: 11, color: F.muted, marginBottom: 3 }}>{l}</div>
                   <div style={{ fontFamily: "'Poppins'", fontWeight: 700,
-                    fontSize: 16, color: c,
+                    fontSize: 16,
+                    
                     background: l === "Risk Level" ? (data.disease_risk === "High" ? F.red : F.amber) : "transparent",
                     color: l === "Risk Level" ? "#fff" : c,
                     borderRadius: l === "Risk Level" ? 6 : 0,
