@@ -12,6 +12,7 @@ const USER_TYPES = [
   { id: "researcher", icon: "/avatars/researcher.png",  label: "Researcher",        color: "#a855f7" },
   { id: "govt",       icon: "/avatars/govt.png",        label: "Government",        color: "#06b6d4" },
   { id: "investor",   icon: "/avatars/investor.png",    label: "Investor",          color: "#ec4899" },
+  { id: "verifier",   icon: "/avatars/verifier.png",    label: "Trust Verifier",    color: "#22c55e" },
 ];
 
 export default function App() {
@@ -80,7 +81,7 @@ return (
           borderRadius: "50%",
           objectFit: "cover",
           marginBottom: 18,
-          center: "center",
+    
           boxShadow: "0 0 30px rgba(34,197,94,.4)",
         }}
       />
@@ -181,8 +182,7 @@ return (
               objectFit: "cover", marginBottom: 14,
               border: "2px solid " + u.color + "44",
             }}
-            onError={(e) => { e.target.style.display = "none"; }}
-          />
+            onError={(e) =>{ (e.target as HTMLImageElement).style.display = "none";}}/>
 
           <h3
             style={{
@@ -220,6 +220,9 @@ return (
 
             {u.id === "investor" &&
               "Discover opportunities across agriculture."}
+
+            {u.id === "verifier" &&
+              "Verify and audit agricultural records on the blockchain."}
           </p>
         </div>
       ))}
@@ -263,6 +266,7 @@ return (
         "📡 Real-Time Monitoring",
         "🔒 Secure Agricultural Data",
         "📈 Predictive Analytics",
+        "🌋 Avalanche Trust Layer",
       ].map((item) => (
         <div
           key={item}

@@ -6,7 +6,7 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, Legend
 } from "recharts";
-import FarmerDashboard from "@/FarmerDashboard";
+
 // ─── THEME ────────────────────────────────────────────────────────
 const T = {
   bg:      "#1f351f",
@@ -248,7 +248,7 @@ function MetricCard({ icon, label, value, delta, color, delay = 0 }) {
   );
 }
 
-function ChartTip({ active, payload, label }) {
+function ChartTip({ active, payload, label }: { active?: boolean; payload?: any[]; label?: string }) {
   if (!active || !payload?.length) return null;
   return (
     <div style={{ background: T.s2, border: "1px solid " + T.border,
@@ -835,7 +835,7 @@ function MachineSidebar({ page, setPage }) {
                     fontFamily: "'Inter'", fontWeight: active ? 600 : 400,
                     transition: "all .2s", textAlign: "left" }}>
                   <div style={{ position: "relative", width: 18, height: 18, flexShrink: 0 }}>
-                    <img src={item.icon} alt="" style={{ width: 18, height: 18, objectFit: "contain", position: "absolute", top: 0, left: 0, zIndex: 2 }} onError={(e) => { e.target.style.display = 'none'; }} />
+                    <img src={item.icon} alt="" style={{ width: 18, height: 18, objectFit: "contain", position: "absolute", top: 0, left: 0, zIndex: 2 }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                     <div style={{ width: 18, height: 18, borderRadius: 4, background: active ? T.g + "33" : T.muted + "22", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, fontWeight: 700, color: active ? T.g : T.muted, position: "absolute", top: 0, left: 0, zIndex: 1 }}>{item.label.charAt(0)}</div>
                   </div>
                   {item.label}
@@ -1043,7 +1043,7 @@ function KnowledgeGraphPanel() {
     weather: [T.teal,   "/knowledge%20icons/weather%20node.jfif", 42],
     market:  [T.amber,  "/knowledge%20icons/market%20node.jfif", 38],
     soil:    [T.orange, "/knowledge%20icons/soil%20node.jfif", 36],
-  };
+  } as const;
   const [selNode, setSelNode] = useState(null);
   const [graph, setGraph] = useState(null);
   const [loading, setLoading] = useState(true);

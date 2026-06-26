@@ -3,6 +3,7 @@ import {
   AreaChart, Area, XAxis, YAxis, Tooltip,
   ResponsiveContainer, BarChart, Bar, Cell ,CartesianGrid
 } from "recharts";
+import AvalancheTrustLayerPage from "../avalanche/page";
 
 // ─── THEME ────────────────────────────────────────────────────────
 const F = {
@@ -130,6 +131,7 @@ const QUICK_ACTIONS = [
   { icon: "📋", label: "Add Farm Record",   color: F.blue    },
   { icon: "🌱", label: "Update Crop Stage", color: F.greenL  },
   { icon: "📖", label: "Treatment Guide",   color: F.amber   },
+  { icon: "🌋", label: "Trust Layer",       color: F.green   },
 ];
 
 const NAV_ITEMS = [
@@ -140,6 +142,7 @@ const NAV_ITEMS = [
   { id: "recommendations", icon: "💡", label: "Recommendations" },
   { id: "market",       icon: "📊", label: "Market Prices" },
   { id: "records",      icon: "📋", label: "My Records"    },
+  { id: "avalanche",    icon: "🌋", label: "Trust Layer"   },
   { id: "chat",         icon: "💬", label: "Chat with AgriMind" },
 ];
 
@@ -979,7 +982,7 @@ function MarketPage({ data }) {
       <div style={{ background: F.greenBg, border: "1px solid " + F.green + "44", borderRadius: 14, padding: 18 }}>
         <div style={{ fontFamily: "'Poppins'", fontWeight: 600, fontSize: 15, color: F.green, marginBottom: 6 }}>💡 AI Market Advice</div>
         <p style={{ fontSize: 14, color: F.text, lineHeight: 1.7 }}>
-          Based on current trends, hold your {selectedCrop} harvest for 7-10 more days. Prices are expected to peak at KSh 46/kg as supply drops 18% in your region. Best window: {selectedData.bestTime}.
+          Based on current trends, hold your {selectedCrop} harvest for 7-10 more days. Prices are expected to peak at KSh 46/kg as supply drops 18% in your region. Best window: {MARKET_MOCK.bestTime}.
         </p>
       </div>
     </div>
@@ -1177,6 +1180,7 @@ export default function FarmerDashboard({ onSwitchToMachine }) {
     recommendations:<RecommendationsPage data={data} />,
     market:         <MarketPage data={data} />,
     records:        <RecordsPage />,
+    avalanche:      <AvalancheTrustLayerPage />,
     chat:           <ChatPage weather={weather} />,
   };
 
