@@ -42,8 +42,6 @@ html,body{background:#f0f7f0;font-family:'Inter',sans-serif}
 ::-webkit-scrollbar-thumb{background:#c8dcc8;border-radius:2px}
 `;
 
-const AI_URL = "https://api.anthropic.com/v1/messages";
-
 // ─── MOCK DATA ────────────────────────────────────────────────────
 const FARMER = {
   name: "John",
@@ -171,37 +169,29 @@ async function getAIRecommendation(farmer, weather) {
     "\"greeting_tip\":\"one encouraging sentence for the farmer\"" +
     "}";
 
-  const res = await fetch(AI_URL, {
+  const res = await fetch("/api/chat", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: "claude-sonnet-4-20250514",
-      max_tokens: 600,
-      system: "You are AgriMind, a friendly and warm AI agricultural assistant for Kenyan farmers. Always be encouraging and practical. Respond ONLY with valid JSON.",
-      messages: [{ role: "user", content: prompt }],
+      farmer,
+      weather,
+      message: prompt,
     }),
   });
-  const d = await res.json();
-  const text = (d.content || []).find(b => b.type === "text")?.text || "{}";
-  return JSON.parse(text.replace(/```json|```/g, "").trim());
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || "Unable to generate a recommendation.");
+  return JSON.parse(data.reply.replace(/```json|```/g, "").trim());
 }
 
 async function chatWithAI(farmer, weather, history, message) {
-  const system =
-    "You are AgriMind, a friendly AI farming assistant for " + farmer.name + " in " + farmer.location + ". " +
-    "They grow " + farmer.crop + " (" + farmer.stage + " stage) on " + farmer.size + ". " +
-    "Be warm, practical and concise. Max 3 sentences. Use simple language a farmer understands.";
-  const messages = [
-    ...history.map(m => ({ role: m.role === "ai" ? "assistant" : "user", content: m.text })),
-    { role: "user", content: message },
-  ];
-  const res = await fetch(AI_URL, {
+  const res = await fetch("/api/chat", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ model: "claude-sonnet-4-20250514", max_tokens: 300, system, messages }),
+    body: JSON.stringify({ farmer, weather, history, message }),
   });
-  const d = await res.json();
-  return (d.content || []).find(b => b.type === "text")?.text || "Let me help you with that!";
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || "Unable to generate a chat response.");
+  return data.reply;
 }
 
 // ─── ATOMS ────────────────────────────────────────────────────────

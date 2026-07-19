@@ -4,29 +4,16 @@
 // and saves results to Supabase health_scores table
 
 import { createClient } from "@supabase/supabase-js";
+import { createOpenAIJsonResponse } from "@/lib/openai";
 
 const sb = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
   process.env.SUPABASE_SERVICE_KEY
 );
 
-const AI_URL = "https://api.anthropic.com/v1/messages";
-
 // ─── HELPER: call Claude AI ────────────────────────────────────────
-async function callClaude(system, prompt) {
-  const res = await fetch(AI_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model: "claude-sonnet-4-20250514",
-      max_tokens: 1000,
-      system,
-      messages: [{ role: "user", content: prompt }],
-    }),
-  });
-  const data = await res.json();
-  const text = (data.content || []).find(b => b.type === "text")?.text || "{}";
-  return JSON.parse(text.replace(/```json|```/g, "").trim());
+async function callOpenAI(instructions, input) {
+  return createOpenAIJsonResponse({ instructions, input, maxOutputTokens: 1000 });
 }
 
 // ─── POST: run core fusion ─────────────────────────────────────────
@@ -88,7 +75,7 @@ export async function POST(request) {
       "}";
 
     // Run core fusion
-    const fusion = await callClaude(
+    const fusion = await callOpenAI(
       "You are the AgriMind Core Reasoning Engine. " +
       "Fuse all agent intelligence into a unified actionable farm report. " +
       "Respond ONLY with valid JSON. No markdown, no backticks, no explanation.",
