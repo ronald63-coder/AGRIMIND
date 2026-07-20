@@ -51,6 +51,8 @@ const FARMER = {
   farmName: "Kamau Farm",
   size: "3.2 ha",
   stage: "Fruiting",
+  plantedAt: "2026-03-10",
+  expectedHarvest: "2026-06-20",
   avatar: "👨‍🌾",
   phone: "+254712345678",
   lastSync: "2 min ago",
@@ -367,6 +369,102 @@ function Sidebar({ page, setPage, weather, alertCount }) {
 }
 
 // ─── DASHBOARD PAGE ───────────────────────────────────────────────
+function CropTimeline() {
+  const stages = ["Seedling", "Vegetative", "Flowering", "Fruiting", "Mature", "Harvested"];
+  const currentStage = stages.indexOf(FARMER.stage);
+  const plantedAt = new Date(FARMER.plantedAt);
+  const harvestAt = new Date(FARMER.expectedHarvest);
+  const today = new Date();
+  const totalDays = Math.max(1, Math.ceil((harvestAt.getTime() - plantedAt.getTime()) / 86_400_000));
+  const daysElapsed = Math.max(0, Math.min(totalDays, Math.ceil((today.getTime() - plantedAt.getTime()) / 86_400_000)));
+  const daysRemaining = Math.max(0, totalDays - daysElapsed);
+
+  return (
+    <div style={{ background: F.card, borderRadius: 16, padding: 22, boxShadow: "0 2px 12px #00000010" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, marginBottom: 22, flexWrap: "wrap" }}>
+        <div>
+          <div style={{ fontFamily: "'Poppins'", fontWeight: 700, fontSize: 17, color: F.text }}>🌱 Crop Timeline</div>
+          <div style={{ fontSize: 12, color: F.muted, marginTop: 3 }}>Planted {plantedAt.toLocaleDateString("en-KE", { day: "numeric", month: "short" })} · Expected harvest {harvestAt.toLocaleDateString("en-KE", { day: "numeric", month: "short" })}</div>
+        </div>
+        <div style={{ background: F.greenBg, color: F.green, borderRadius: 20, padding: "5px 10px", fontSize: 12, fontWeight: 700 }}>{FARMER.stage}</div>
+      </div>
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", position: "relative", marginBottom: 18 }}>
+        <div style={{ position: "absolute", left: "5%", right: "5%", top: 13, height: 4, background: F.border, zIndex: 0 }} />
+        <div style={{ position: "absolute", left: "5%", width: `${Math.max(0, currentStage) / (stages.length - 1) * 90}%`, top: 13, height: 4, background: F.green, zIndex: 1, transition: "width .4s ease" }} />
+        {stages.map((stage, index) => {
+          const complete = index <= currentStage;
+          const active = index === currentStage;
+          return <div key={stage} style={{ width: "16.66%", position: "relative", zIndex: 2, textAlign: "center" }}>
+            <div style={{ width: 28, height: 28, margin: "0 auto 7px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 800, background: active ? F.green : complete ? F.greenBg : F.card, color: active ? "#fff" : complete ? F.green : F.mutedL, border: `2px solid ${active || complete ? F.green : F.border}`, boxShadow: active ? "0 0 0 5px " + F.green + "22" : "none" }}>{complete ? "✓" : index + 1}</div>
+            <div style={{ color: active ? F.green : F.muted, fontSize: 10, fontWeight: active ? 700 : 500, lineHeight: 1.2 }}>{stage}</div>
+          </div>;
+        })}
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
+        {[{ label: "Days elapsed", value: daysElapsed }, { label: "Days remaining", value: daysRemaining }, { label: "Crop cycle", value: `${totalDays} days` }].map(item => <div key={item.label} style={{ background: F.bg, borderRadius: 10, padding: "10px 12px" }}><div style={{ color: F.muted, fontSize: 11 }}>{item.label}</div><div style={{ color: F.text, fontSize: 16, fontWeight: 800, marginTop: 2 }}>{item.value}</div></div>)}
+      </div>
+    </div>
+  );
+}
+
+function SoilHealthCard() {
+  const metrics = [
+    { label: "Moisture", value: 62, ideal: "60–70%", status: "Good", color: F.green },
+    { label: "pH", value: 70, display: "6.5", ideal: "6.0–6.8", status: "Good", color: F.green },
+    { label: "Nitrogen", value: 46, ideal: "40–60 ppm", status: "Fair", color: F.amber },
+    { label: "Phosphorus", value: 72, ideal: "20–30 ppm", status: "Good", color: F.green },
+    { label: "Potassium", value: 38, ideal: "180–250 ppm", status: "Poor", color: F.red },
+    { label: "Organic Matter", value: 58, ideal: "3–5%", status: "Fair", color: F.amber },
+  ];
+  return <div style={{ background: F.card, borderRadius: 16, padding: 22, boxShadow: "0 2px 12px #00000010" }}>
+    <div style={{ fontFamily: "'Poppins'", fontWeight: 700, fontSize: 17, color: F.text, marginBottom: 4 }}>🪴 Soil Health</div>
+    <div style={{ fontSize: 12, color: F.muted, marginBottom: 16 }}>Latest field-sensor and soil-test readings</div>
+    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 12 }}>
+      {metrics.map(metric => <div key={metric.label} style={{ background: F.bg, borderRadius: 12, padding: 12 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", gap: 6 }}><span style={{ fontSize: 12, color: F.text, fontWeight: 600 }}>{metric.label}</span><span style={{ color: metric.color, fontSize: 10, fontWeight: 800 }}>{metric.status}</span></div>
+        <div style={{ height: 6, borderRadius: 6, overflow: "hidden", background: F.border, margin: "9px 0 6px" }}><div style={{ height: "100%", width: `${metric.value}%`, background: metric.color, borderRadius: 6 }} /></div>
+        <div style={{ color: F.muted, fontSize: 10 }}>{metric.display || `${metric.value}%`} · Ideal {metric.ideal}</div>
+      </div>)}
+    </div>
+    <div style={{ marginTop: 14, padding: "12px 14px", background: F.amberBg, borderLeft: `3px solid ${F.amber}`, borderRadius: 8, color: F.text, fontSize: 13, lineHeight: 1.55 }}><strong>Fertilizer recommendation:</strong> Apply 50 kg/acre of MOP (muriate of potash) this week; your potassium is below the ideal range for fruiting tomatoes.</div>
+  </div>;
+}
+
+function NearbyFarmerAlerts() {
+  const alerts = [
+    { name: "Mary Wanjiku", distance: "1.2 km", issue: "Late Blight", detail: "Moderate outbreak reported in tomatoes", color: F.red, icon: "⚠️" },
+    { name: "Peter Ochieng", distance: "3.4 km", issue: "Whitefly", detail: "Increasing activity in greenhouse crops", color: F.amber, icon: "🐛" },
+    { name: "Grace Njeri", distance: "4.1 km", issue: "Waterlogging", detail: "Heavy rain affecting lower fields", color: F.blue, icon: "💧" },
+  ];
+  return <div style={{ background: F.card, borderRadius: 16, padding: 22, boxShadow: "0 2px 12px #00000010" }}>
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}><div style={{ fontFamily: "'Poppins'", fontWeight: 700, fontSize: 17, color: F.text }}>📡 Nearby Farmer Alerts</div><span style={{ color: F.green, fontSize: 11, fontWeight: 700 }}>COMMUNITY LIVE</span></div>
+    <div style={{ fontSize: 12, color: F.muted, marginBottom: 14 }}>Community intelligence from farms near you</div>
+    <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>{alerts.map(alert => <div key={alert.name} style={{ display: "flex", alignItems: "center", gap: 11, padding: "11px 12px", background: alert.color + "0d", border: `1px solid ${alert.color}33`, borderRadius: 10 }}><div style={{ fontSize: 20 }}>{alert.icon}</div><div style={{ flex: 1 }}><div style={{ fontSize: 13, color: F.text, fontWeight: 700 }}>{alert.issue} <span style={{ fontWeight: 400, color: F.muted }}>· {alert.name}</span></div><div style={{ fontSize: 11, color: F.muted, marginTop: 2 }}>{alert.detail}</div></div><div style={{ color: alert.color, fontSize: 11, fontWeight: 700, whiteSpace: "nowrap" }}>{alert.distance}</div></div>)}</div>
+  </div>;
+}
+
+function TreatmentCostCalculator({ data }) {
+  const options = [
+    { name: "Mancozeb", cost: 3200, efficacy: 0.62 }, { name: "Ridomil Gold", cost: 6800, efficacy: 0.84 }, { name: "Copper Oxychloride", cost: 4100, efficacy: 0.69 }, { name: "Neem Oil", cost: 2500, efficacy: 0.45 },
+  ];
+  const [selected, setSelected] = useState(0);
+  const [calculated, setCalculated] = useState(false);
+  const risk = String(data?.disease_risk || data?.pest_risk || "Moderate").toLowerCase();
+  const riskFactor = risk === "high" ? 0.3 : risk === "low" ? 0.12 : 0.2;
+  const potentialLoss = Math.round(2400 * 38 * riskFactor);
+  const treatment = options[selected];
+  const lossAvoided = Math.round(potentialLoss * treatment.efficacy);
+  const netBenefit = lossAvoided - treatment.cost;
+  const roi = Math.round((netBenefit / treatment.cost) * 100);
+  return <div style={{ background: F.card, borderRadius: 16, padding: 22, boxShadow: "0 2px 12px #00000010" }}>
+    <div style={{ fontFamily: "'Poppins'", fontWeight: 700, fontSize: 17, color: F.text }}>🧮 Treatment Cost Calculator</div>
+    <div style={{ fontSize: 12, color: F.muted, margin: "3px 0 15px" }}>Based on your current <strong style={{ color: risk === "high" ? F.red : risk === "low" ? F.green : F.amber }}>{risk} risk</strong> and estimated tomato yield</div>
+    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: 8, marginBottom: 13 }}>{options.map((option, index) => <button key={option.name} onClick={() => { setSelected(index); setCalculated(false); }} style={{ padding: 10, borderRadius: 10, cursor: "pointer", background: selected === index ? F.greenBg : F.bg, border: `1px solid ${selected === index ? F.green : F.border}`, textAlign: "left" }}><div style={{ color: F.text, fontSize: 12, fontWeight: 700 }}>{option.name}</div><div style={{ color: F.muted, fontSize: 11, marginTop: 2 }}>KSh {option.cost.toLocaleString()}</div></button>)}</div>
+    <button onClick={() => setCalculated(true)} style={{ background: F.green, border: "none", borderRadius: 9, color: "#fff", width: "100%", padding: "10px 14px", cursor: "pointer", fontWeight: 700, fontSize: 13 }}>Calculate {treatment.name} benefit</button>
+    {calculated && <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8, marginTop: 14 }}>{[{ label: "Total cost", value: `KSh ${treatment.cost.toLocaleString()}`, color: F.text }, { label: "Loss avoided", value: `KSh ${lossAvoided.toLocaleString()}`, color: F.green }, { label: "Net benefit", value: `KSh ${netBenefit.toLocaleString()}`, color: netBenefit >= 0 ? F.green : F.red }, { label: "ROI", value: `${roi}%`, color: roi >= 0 ? F.green : F.red }].map(item => <div key={item.label} style={{ background: F.bg, padding: "10px 8px", borderRadius: 9, textAlign: "center" }}><div style={{ fontSize: 10, color: F.muted }}>{item.label}</div><div style={{ fontSize: 13, color: item.color, fontWeight: 800, marginTop: 3 }}>{item.value}</div></div>)}</div>}
+  </div>;
+}
+
 function DashboardPage({ data, loading, onMarkDone, done, setPage }) {
   const score = data?.health_score || 87;
   const scoreColor = score >= 70 ? F.green : score >= 45 ? F.amber : F.red;
@@ -647,6 +745,11 @@ function DashboardPage({ data, loading, onMarkDone, done, setPage }) {
           </div>
         </div>
       </div>
+
+      <CropTimeline />
+      <SoilHealthCard />
+      <NearbyFarmerAlerts />
+      <TreatmentCostCalculator data={data} />
 
       {/* Quick actions */}
       <div style={{ background: F.card, borderRadius: 16, padding: 20,
