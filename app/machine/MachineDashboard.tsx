@@ -584,61 +584,169 @@ function AgentsStatus() {
 
 // ─── DATA STREAMS ─────────────────────────────────────────────────
 function DataStreams() {
-  return (
-    <div style={{ background: T.card, border: "1px solid " + T.border,
-      borderRadius: 12, padding: 16 }}>
-      <div style={{ display: "flex", justifyContent: "space-between",
-        alignItems: "center", marginBottom: 14 }}>
-        <div style={{ fontFamily: "'Inter'", fontWeight: 600,
-          fontSize: 16, color: T.text }}>Data Streams (Live)</div>
-        <button style={{ background: "none", border: "none", color: T.g,
-          fontSize: 12, cursor: "pointer", fontWeight: 500 }}>
-          View All Streams →
-        </button>
-      </div>
+  const [active, setActive] = useState("All Sources");
+  const [pulse, setPulse] = useState(0);
 
-      <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
-        {/* Donut */}
-        <div style={{ position: "relative", width: 160, height: 160, flexShrink: 0 }}>
-          <ResponsiveContainer width={160} height={160}>
-            <PieChart>
-              <Pie data={DATA_STREAMS} cx={75} cy={75}
-                innerRadius={48} outerRadius={72}
-                dataKey="value" strokeWidth={0}>
-                {DATA_STREAMS.map((d, i) => (
-                  <Cell key={i} fill={d.color} />
-                ))}
-              </Pie>
-            </PieChart>
-          </ResponsiveContainer>
-          <div style={{ position: "absolute", inset: 0,
-            display: "flex", flexDirection: "column",
-            alignItems: "center", justifyContent: "center" }}>
-            <div style={{ fontFamily: "'Inter'", fontWeight: 800,
-              fontSize: 18, color: T.text, lineHeight: 1 }}>2.45M</div>
-            <div style={{ fontSize: 9, color: T.muted,
-              fontFamily: "'JetBrains Mono'", marginTop: 2 }}>Total (24h)</div>
+  useEffect(() => {
+    const iv = setInterval(() => setPulse(p => (p + 1) % 100), 55);
+    return () => clearInterval(iv);
+  }, []);
+
+  const sources = [
+    { name:"Satellite", short:"SAT", color:T.blue, value:24, records:"588K", icon:"◉", path:"M 92 88 C 190 70, 265 120, 340 178" },
+    { name:"Weather", short:"WX", color:T.teal, value:22, records:"538K", icon:"☁", path:"M 92 178 C 185 145, 270 155, 340 190" },
+    { name:"Soil Sensors", short:"SOIL", color:T.orange, value:18, records:"441K", icon:"◌", path:"M 92 270 C 190 225, 270 215, 340 202" },
+    { name:"Drones", short:"DRONE", color:T.purple, value:12, records:"294K", icon:"◇", path:"M 608 88 C 510 70, 435 120, 360 178" },
+    { name:"Farm Records", short:"FARM", color:T.g, value:10, records:"245K", icon:"⌂", path:"M 608 178 C 515 145, 430 155, 360 190" },
+    { name:"Market Feeds", short:"MKT", color:T.amber, value:8, records:"196K", icon:"↗", path:"M 608 270 C 510 225, 430 215, 360 202" },
+  ];
+
+  const graphData = [
+    { date:"13:00", value:42 }, { date:"13:10", value:51 }, { date:"13:20", value:48 },
+    { date:"13:30", value:67 }, { date:"13:40", value:61 }, { date:"13:50", value:78 },
+    { date:"14:00", value:74 }, { date:"14:10", value:86 }, { date:"14:20", value:82 },
+    { date:"14:30", value:94 }, { date:"14:40", value:88 }, { date:"14:50", value:97 },
+  ];
+
+  const activeSource = sources.find(s => s.name === active);
+  const streamOpacity = (name) => active === "All Sources" || active === name ? 1 : .16;
+
+  return (
+    <div style={{ display:"flex", flexDirection:"column", gap:14 }}>
+      {/* 3D DATA STREAM VISUALIZATION */}
+      <div style={{ background:T.card, border:"1px solid " + T.border, borderRadius:12, overflow:"hidden" }}>
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"16px 18px 10px" }}>
+          <div>
+            <div style={{ fontFamily:"'Inter'", fontWeight:700, fontSize:17, color:T.text }}>Agricultural Data Streams</div>
+            <div style={{ fontSize:11, color:T.muted, marginTop:3 }}>Multi-source ingestion → AgriMind Intelligence Core</div>
+          </div>
+          <div style={{ display:"flex", alignItems:"center", gap:7, background:T.g+"12", border:"1px solid "+T.g+"35", borderRadius:20, padding:"6px 10px" }}>
+            <LiveDot color={T.g} /><span style={{ fontSize:10, color:T.g, fontFamily:"'JetBrains Mono'" }}>STREAMING LIVE</span>
           </div>
         </div>
 
-        {/* Legend */}
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 7 }}>
-          {DATA_STREAMS.map((d, i) => (
-            <div key={i} style={{ display: "flex", alignItems: "center",
-              justifyContent: "space-between", gap: 8 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
-                <div style={{ width: 10, height: 10, borderRadius: 2,
-                  background: d.color, flexShrink: 0 }} />
-                <span style={{ fontSize: 11, color: T.mutedL }}>{d.name}</span>
-              </div>
-              <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-                <span style={{ fontSize: 11, color: T.text,
-                  fontWeight: 600 }}>{d.value}%</span>
-                <span style={{ fontSize: 10, color: T.muted,
-                  fontFamily: "'JetBrains Mono'" }}>{d.records}</span>
-              </div>
-            </div>
-          ))}
+        <div style={{ position:"relative", height:480, background:"radial-gradient(circle at 50% 48%, #12351c 0%, #091109 48%, #060a06 100%)", overflow:"hidden" }}>
+          <div style={{ position:"absolute", inset:0, opacity:.28, backgroundImage:"linear-gradient("+T.border+" 1px, transparent 1px),linear-gradient(90deg,"+T.border+" 1px,transparent 1px)", backgroundSize:"42px 42px", transform:"perspective(600px) rotateX(58deg) scale(1.35) translateY(95px)" }} />
+
+          <svg viewBox="0 0 700 390" style={{ position:"absolute", inset:0, width:"100%", height:"100%" }}>
+            <defs>
+              <filter id="dsGlow"><feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+              <radialGradient id="coreGlow"><stop offset="0%" stopColor={T.g} stopOpacity=".55"/><stop offset="55%" stopColor={T.g} stopOpacity=".12"/><stop offset="100%" stopColor={T.g} stopOpacity="0"/></radialGradient>
+              <linearGradient id="coreMetal" x1="0" x2="1"><stop stopColor="#0b1d0d"/><stop offset=".5" stopColor="#1c4d27"/><stop offset="1" stopColor="#071008"/></linearGradient>
+            </defs>
+
+            <ellipse cx="350" cy="195" rx="175" ry="120" fill="url(#coreGlow)" />
+
+            {/* Data highways */}
+            {sources.map((src, i) => (
+              <g key={src.name} opacity={streamOpacity(src.name)} style={{ transition:"opacity .35s" }}>
+                <path d={src.path} fill="none" stroke={src.color+"22"} strokeWidth="10" filter="url(#dsGlow)" />
+                <path d={src.path} fill="none" stroke={src.color+"55"} strokeWidth="2" strokeDasharray="5 8" style={{ strokeDashoffset: -pulse*2, transition:"none" }} />
+                {[0,1,2,3].map(j => {
+                  const pct = ((pulse + j*25 + i*9) % 100) / 100;
+                  const left = src.name === "Satellite" || src.name === "Weather" || src.name === "Soil Sensors";
+                  // Points move along a visually curved stream; CSS animation supplies the continuous motion.
+                  return <circle key={j} r={j===0 ? 4 : 2.5} fill={src.color} filter="url(#dsGlow)" opacity={.9}
+                    style={{ animation:`streamParticle${i} ${2.8+i*.25}s linear infinite`, animationDelay:`-${pct*2.8}s` }} />;
+                })}
+              </g>
+            ))}
+
+            {/* Source nodes */}
+            {sources.map((src, i) => {
+              const left = i < 3;
+              const y = [88,178,270][i%3];
+              const x = left ? 72 : 628;
+              return (
+                <g key={src.name} transform={`translate(${x},${y})`} opacity={streamOpacity(src.name)} onClick={() => setActive(active === src.name ? "All Sources" : src.name)} style={{ cursor:"pointer", transition:"opacity .35s" }}>
+                  <circle r="25" fill={src.color+"12"} stroke={src.color+"55"} />
+                  <circle r="18" fill={T.s1} stroke={src.color} strokeWidth="1.5" />
+                  <text textAnchor="middle" y="5" fill={src.color} fontSize="14" fontFamily="Inter" fontWeight="700">{src.icon}</text>
+                  <text x={left ? 32 : -32} y="-7" textAnchor={left ? "start" : "end"} fill={T.text} fontSize="10" fontFamily="Inter" fontWeight="600">{src.name}</text>
+                  <text x={left ? 32 : -32} y="8" textAnchor={left ? "start" : "end"} fill={T.muted} fontSize="8" fontFamily="JetBrains Mono">{src.records} · {src.value}%</text>
+                </g>
+              );
+            })}
+
+            {/* Rotating 3D core rings */}
+            <g transform={`rotate(${pulse*3.6} 350 195)`} opacity=".9">
+              <ellipse cx="350" cy="195" rx="91" ry="34" fill="none" stroke={T.g+"55"} strokeWidth="1.5" strokeDasharray="8 6" />
+              <ellipse cx="350" cy="195" rx="108" ry="42" fill="none" stroke={T.teal+"35"} strokeWidth="1" strokeDasharray="3 10" transform="rotate(35 350 195)" />
+              <ellipse cx="350" cy="195" rx="120" ry="48" fill="none" stroke={T.blue+"28"} strokeWidth="1" transform="rotate(-28 350 195)" />
+            </g>
+
+            {/* Central 3D intelligence core */}
+            <g transform="translate(350,195)">
+              <ellipse cy="46" rx="76" ry="18" fill="#000" opacity=".45" />
+              <path d="M-66 -25 L66 -25 L58 35 Q0 57 -58 35 Z" fill="url(#coreMetal)" stroke={T.g+"88"} strokeWidth="1.5" />
+              <ellipse cy="-25" rx="66" ry="22" fill="#102a15" stroke={T.g+"aa"} strokeWidth="2" />
+              <ellipse cy="-25" rx="49" ry="15" fill="#061007" stroke={T.teal+"66"} />
+              <circle cy="-25" r="9" fill={T.g+"44"} stroke={T.g} filter="url(#dsGlow)" />
+              <circle cy="-25" r="3" fill={T.white} />
+              <text textAnchor="middle" y="3" fill={T.text} fontSize="13" fontFamily="Inter" fontWeight="800">AGRIMIND</text>
+              <text textAnchor="middle" y="19" fill={T.g} fontSize="8" fontFamily="JetBrains Mono" letterSpacing="1.5">INTELLIGENCE CORE</text>
+              <text textAnchor="middle" y="32" fill={T.mutedL} fontSize="7" fontFamily="JetBrains Mono">INGEST · FUSE · ANALYZE</text>
+            </g>
+
+            {/* flowing output */}
+            <path d="M350 250 C350 295, 350 320, 350 355" stroke={T.g+"55"} strokeWidth="8" fill="none" filter="url(#dsGlow)" />
+            <path d="M350 250 C350 295, 350 320, 350 355" stroke={T.g} strokeWidth="1.5" strokeDasharray="4 8" style={{ strokeDashoffset:-pulse*2 }} />
+            <text x="350" y="375" textAnchor="middle" fill={T.mutedL} fontSize="8" fontFamily="JetBrains Mono">UNIFIED AGRICULTURAL SIGNAL</text>
+          </svg>
+
+          {/* Moving particles are positioned by CSS paths below */}
+          <style>{sources.map((src, i) => {
+            const start = i < 3 ? "8% 22%" : "92% 22%";
+            const end = "50% 50%";
+            return `@keyframes streamParticle${i}{0%{left:${i<3?12:88}%;top:${[23,46,69][i%3]}%;opacity:0;transform:scale(.5)}12%{opacity:1}82%{opacity:1}100%{left:50%;top:50%;opacity:0;transform:scale(1.5)}}`;
+          }).join(" ")}</style>
+          {sources.map((src,i)=><div key={src.name+"particle"} style={{ position:"absolute", width:8, height:8, borderRadius:"50%", background:src.color, boxShadow:"0 0 12px "+src.color, animation:`streamParticle${i} ${2.8+i*.25}s linear infinite`, animationDelay:`-${i*.45}s`, pointerEvents:"none", opacity:streamOpacity(src.name) }} />)}
+
+          <div style={{ position:"absolute", left:18, bottom:14, display:"flex", gap:6, flexWrap:"wrap" }}>
+            {sources.map(src => <button key={src.name} onClick={() => setActive(active === src.name ? "All Sources" : src.name)} style={{ background:active===src.name?src.color+"20":T.s1+"dd", border:"1px solid "+(active===src.name?src.color:T.border), color:active===src.name?src.color:T.mutedL, borderRadius:5, padding:"5px 8px", fontSize:8, fontFamily:"'JetBrains Mono'", cursor:"pointer" }}>{src.short}</button>)}
+          </div>
+        </div>
+
+        <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:8, padding:12 }}>
+          {[
+            ["ACTIVE SOURCES", sources.length, T.g],
+            ["RECORDS / 24H", "2.45M", T.blue],
+            ["INGESTION RATE", "1.84K/s", T.teal],
+            ["CORE STATUS", activeSource ? activeSource.name.toUpperCase() : "ALL SOURCES", activeSource?.color || T.g],
+          ].map(([l,v,c])=><div key={l} style={{ background:T.s1, borderRadius:8, padding:"9px 11px", border:"1px solid "+T.border }}><div style={{fontSize:8,color:T.muted,fontFamily:"'JetBrains Mono'"}}>{l}</div><div style={{fontSize:15,color:c,fontWeight:800,marginTop:3}}>{v}</div></div>)}
+        </div>
+      </div>
+
+      {/* GRAPH UNDER THE 3D VISUALIZATION */}
+      <div style={{ background:T.card, border:"1px solid "+T.border, borderRadius:12, padding:16 }}>
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}>
+          <div>
+            <div style={{ fontFamily:"'Inter'", fontWeight:600, fontSize:16, color:T.text }}>Data Ingestion Flow</div>
+            <div style={{ fontSize:10, color:T.muted, marginTop:2 }}>Records entering the AgriMind intelligence core</div>
+          </div>
+          <div style={{ display:"flex", alignItems:"center", gap:6 }}><LiveDot color={T.g}/><span style={{fontSize:9,color:T.g,fontFamily:"'JetBrains Mono'"}}>LIVE / SEC</span></div>
+        </div>
+        <ResponsiveContainer width="100%" height={190}>
+          <AreaChart data={graphData}>
+            <defs><linearGradient id="gStream" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor={T.g} stopOpacity=".3"/><stop offset="95%" stopColor={T.g} stopOpacity="0"/></linearGradient></defs>
+            <CartesianGrid strokeDasharray="3 3" stroke={T.border} vertical={false}/>
+            <XAxis dataKey="date" tick={{fill:T.muted,fontSize:9,fontFamily:"'JetBrains Mono'"}} axisLine={false} tickLine={false}/>
+            <YAxis tick={{fill:T.muted,fontSize:9,fontFamily:"'JetBrains Mono'"}} axisLine={false} tickLine={false} width={28}/>
+            <Tooltip content={<ChartTip/>}/>
+            <Area type="monotone" dataKey="value" name="Records/sec" stroke={T.g} fill="url(#gStream)" strokeWidth={2} dot={false} isAnimationActive animationDuration={900}/>
+          </AreaChart>
+        </ResponsiveContainer>
+      </div>
+
+      {/* Source breakdown */}
+      <div style={{ background:T.card, border:"1px solid "+T.border, borderRadius:12, padding:16 }}>
+        <div style={{fontFamily:"'Inter'",fontWeight:600,fontSize:15,color:T.text,marginBottom:12}}>Stream Sources</div>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8}}>
+          {sources.map(src=><button key={src.name} onClick={()=>setActive(active===src.name?"All Sources":src.name)} style={{textAlign:"left",background:active===src.name?src.color+"12":T.s1,border:"1px solid "+(active===src.name?src.color+"55":T.border),borderRadius:8,padding:"10px 12px",cursor:"pointer"}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontSize:11,color:T.text,fontWeight:600}}>{src.name}</span><span style={{fontSize:10,color:src.color,fontFamily:"'JetBrains Mono'"}}>{src.value}%</span></div>
+            <div style={{fontSize:9,color:T.muted,marginTop:4,fontFamily:"'JetBrains Mono'"}}>{src.records} records</div>
+            <div style={{height:3,background:T.border,borderRadius:4,marginTop:7,overflow:"hidden"}}><div style={{width:src.value*3.8+"%",height:"100%",background:src.color,borderRadius:4}}/></div>
+          </button>)}
         </div>
       </div>
     </div>
