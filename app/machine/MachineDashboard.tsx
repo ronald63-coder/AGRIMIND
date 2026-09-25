@@ -713,7 +713,7 @@ function DataStreams() {
             ["RECORDS / 24H", "2.45M", T.blue],
             ["INGESTION RATE", "1.84K/s", T.teal],
             ["CORE STATUS", activeSource ? activeSource.name.toUpperCase() : "ALL SOURCES", activeSource?.color || T.g],
-          ].map(([l,v,c])=><div key={l} style={{ background:T.s1, borderRadius:8, padding:"9px 11px", border:"1px solid "+T.border }}><div style={{fontSize:8,color:T.muted,fontFamily:"'JetBrains Mono'"}}>{l}</div><div style={{fontSize:15,color:c,fontWeight:800,marginTop:3}}>{v}</div></div>)}
+            ].map(([l,v,c])=><div key={l} style={{ background:T.s1, borderRadius:8, padding:"9px 11px", border:"1px solid "+T.border }}><div style={{fontSize:8,color:T.muted,fontFamily:"'JetBrains Mono'"}}>{l}</div><div style={{fontSize:15,color:String(c),fontWeight:800,marginTop:3}}>{v}</div></div>)}
         </div>
       </div>
 
@@ -908,7 +908,7 @@ function MachineSidebar({ page, setPage }) {
             width: 99, height: 120, borderRadius: 30,
             objectFit: "cover"
           }} />
-          <div>
+          <div> 
             <div style={{ fontFamily: "'Inter'", fontWeight: 800,
               fontSize: 20, color: T.text, letterSpacing: "-0.01em" }}>
               Agri<span style={{ color: T.g }}>Mind</span>
